@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### postgreSQL 관련 정보 ###
+application-db.properties
