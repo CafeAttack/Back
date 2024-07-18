@@ -11,7 +11,7 @@ import lombok.*;
 public class Bookmark {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;  // id가 필요한 건지 잘 모르겠음
+    private Integer id;  // id가 필요한 건지 잘 모르겠음
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
