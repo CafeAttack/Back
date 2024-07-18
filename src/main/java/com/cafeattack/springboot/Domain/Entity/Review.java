@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int review_id;
+    private Integer review_id;
 
     @Column(nullable = false)
     private String cafe_name;
