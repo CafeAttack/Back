@@ -15,10 +15,10 @@ import java.util.List;
 public class Cafe {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer cafe_id;
+    private Integer cafe_Id;
 
     @Column(nullable = false)
-    private String cafe_name;
+    private String cafeName;
 
     @Column(nullable = false)
     private BigDecimal latitude;
@@ -35,12 +35,16 @@ public class Cafe {
     @Column(nullable = false)
     private String phone;
 
-    @Column(nullable = false)
-    private boolean heart;
-
     @Column
     private Integer review_cnt;  // 이게 필요할까...
 
     @Column
     private BigDecimal avg_score;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "bookmark")
+    private Bookmark bookmark;
+
+    @OneToMany(mappedBy = "review_id", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> reviews;
 }

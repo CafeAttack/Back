@@ -16,7 +16,10 @@ import java.util.List;
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer member_id;
+    private Integer member_Id;
+
+    @Column(nullable = false)
+    private String sign_Id;
 
     @Column(nullable = false)
     private String name;
@@ -30,27 +33,19 @@ public class Member {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = true)  // 약간 헷갈려
-    private String check_password;
-
     @Column(nullable = false)
     private Date birth;
-
-    @Column(nullable = false)
-    private boolean agreement;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<Bookmark> bookmarks = new ArrayList<>();
 
     @Builder
-    public Member(String name, String nickname, String email, String password,
-                  String check_password, Date birth, boolean agreement) {
+    public Member(String sign_id, String name, String nickname, String email, String password, Date birth) {
+        this.sign_Id = sign_id;
         this.name = name;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
-        this.check_password = check_password;
         this.birth = birth;
-        this.agreement = agreement;
     }
 }
