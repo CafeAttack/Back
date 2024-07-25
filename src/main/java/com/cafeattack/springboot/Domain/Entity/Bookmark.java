@@ -3,6 +3,9 @@ package com.cafeattack.springboot.Domain.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Builder
 @AllArgsConstructor
@@ -11,13 +14,20 @@ import lombok.*;
 public class Bookmark {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;  // id가 필요한 건지 잘 모르겠음
+    public Integer groupId;
+
+    @Column
+    public Integer memberId;
+
+    @Column
+    public String groupName;
+
+    @Column
+    public Integer cafeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
-    private Member member;
+    public Member member;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id")
-    private Group group;
+    @OneToMany(mappedBy = "cafeId", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Cafe> cafes = new ArrayList<>();
 }
