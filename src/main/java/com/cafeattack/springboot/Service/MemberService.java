@@ -53,7 +53,6 @@ public class MemberService {
         return new Member(authRequestDto);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public ResponseEntity menu_Page(Integer member_id) {
         Member member = memberRepository.findById(member_id).get();
@@ -67,7 +66,7 @@ public class MemberService {
                 .nickname(member.getName())
                 .favor_count(favor_count).build();
 
-        return ResponseEntity.status(200).body(new BaseResponse(200, MenuPageRequestDto));
+        return ResponseEntity.status(200).body(new BaseResponse(200, "메뉴가 열렸습니다.", MenuPageRequestDto));
     }
 }
 

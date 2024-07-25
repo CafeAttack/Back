@@ -17,11 +17,10 @@ import java.util.List;
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "memberid")
-    private Integer memberId;
+    private Integer memberid;
 
-    @Column(name = "signid", nullable = false)
-    private String signId;
+    @Column(nullable = false)
+    private String signid;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -44,7 +43,7 @@ public class Member {
     @Builder
     public Member(String signId, String name, String nickname,
                   String email, String password, Date birth) {
-        this.signId = signId;
+        this.signid = signId;
         this.name = name;
         this.nickname = nickname;
         this.email = email;
@@ -54,7 +53,7 @@ public class Member {
 
     @Builder
     public Member(AuthRequestDto authRequestDto) {
-        this.signId = authRequestDto.getSignId();
+        this.signid = authRequestDto.getSignId();
         this.name = authRequestDto.getName();
         this.nickname = authRequestDto.getNickname();
         this.email = authRequestDto.getEmail();

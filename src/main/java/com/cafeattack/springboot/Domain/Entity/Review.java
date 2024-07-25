@@ -15,10 +15,10 @@ import java.util.Date;
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer review_id;
+    private Integer reviewid;
 
     @Column(nullable = false)
-    private Integer cafe_id;
+    private Integer cafeid;
 
     @Column(nullable = false)
     private String reviewWriter;

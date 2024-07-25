@@ -15,7 +15,7 @@ import java.util.List;
 public class Cafe {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer cafe_Id;
+    private Integer cafeid;
 
     @Column(nullable = false)
     private String cafeName;
@@ -42,9 +42,9 @@ public class Cafe {
     private BigDecimal avg_score;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "bookmark")
+    @JoinColumn(name = "groupid")
     private Bookmark bookmark;
 
-    @OneToMany(mappedBy = "review_id", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "reviewid", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews;
 }

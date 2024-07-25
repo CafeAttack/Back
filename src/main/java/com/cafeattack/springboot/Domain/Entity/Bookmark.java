@@ -14,20 +14,21 @@ import java.util.List;
 public class Bookmark {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Integer groupId;
+    @Column
+    public Integer groupid;
 
     @Column
-    public Integer memberId;
+    public Integer memberid;
 
     @Column
     public String groupName;
 
     @Column
-    public Integer cafeId;
+    public Integer cafeid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     public Member member;
 
-    @OneToMany(mappedBy = "cafeId", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "cafeid", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<Cafe> cafes = new ArrayList<>();
 }
