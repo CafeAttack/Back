@@ -34,5 +34,8 @@ public class MemberController {
         return memberService.menu_Page(memberid);
     }
 
-
+    @GetMapping("/member/{memberid}/reset-info")
+    public ResponseEntity resetinfo_Page(@PathVariable("memberid") int memberid) {
+        return memberService.reset_Info(memberid);
+    }
 }
