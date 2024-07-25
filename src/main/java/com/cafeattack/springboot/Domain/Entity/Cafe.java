@@ -15,10 +15,10 @@ import java.util.List;
 public class Cafe {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer cafe_id;
+    private Integer cafeId;
 
     @Column(nullable = false)
-    private String cafe_name;
+    private String cafeName;
 
     @Column(nullable = false)
     private BigDecimal latitude;
@@ -43,4 +43,8 @@ public class Cafe {
 
     @Column
     private BigDecimal avg_score;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "bookmark")
+    private Bookmark bookmark;
 }
