@@ -1,5 +1,6 @@
 package com.cafeattack.springboot.Domain.Entity;
 
+import com.cafeattack.springboot.Domain.Dto.request.AuthRequestDto;
 import com.cafeattack.springboot.Exception.BadRequestException;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,36 +17,48 @@ import java.util.List;
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer member_Id;
+    @Column(name = "memberid")
+    private Integer memberId;
 
-    @Column(nullable = false)
-    private String sign_Id;
+    @Column(name = "signid", nullable = false)
+    private String signId;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "nickname", nullable = false)
     private String nickname;
 
-    @Column(nullable = false)
+    @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(nullable = false)
+    @Column(name = "birth", nullable = false)
     private Date birth;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<Bookmark> bookmarks = new ArrayList<>();
 
     @Builder
-    public Member(String sign_id, String name, String nickname, String email, String password, Date birth) {
-        this.sign_Id = sign_id;
+    public Member(String signId, String name, String nickname,
+                  String email, String password, Date birth) {
+        this.signId = signId;
         this.name = name;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
         this.birth = birth;
+    }
+
+    @Builder
+    public Member(AuthRequestDto authRequestDto) {
+        this.signId = authRequestDto.getSignId();
+        this.name = authRequestDto.getName();
+        this.nickname = authRequestDto.getNickname();
+        this.email = authRequestDto.getEmail();
+        this.password = authRequestDto.getPassword();
+        this.birth = authRequestDto.getBirth();
     }
 }
