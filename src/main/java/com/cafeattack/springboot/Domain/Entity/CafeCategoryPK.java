@@ -8,6 +8,6 @@ import java.io.Serializable;
 @Getter
 @Embeddable
 public class CafeCategoryPK implements Serializable {
-    private Integer CafeID;
-    private Integer CategoryID;
+    private Integer cafeid;
+    private Integer category;
 }

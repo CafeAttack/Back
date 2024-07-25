@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -14,45 +15,27 @@ import java.math.BigDecimal;
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer review_id;
+    private Integer reviewid;
 
     @Column(nullable = false)
-    private String cafe_name;
+    private Integer cafeid;
 
     @Column(nullable = false)
-    private BigDecimal latitude;
+    private String reviewWriter;
 
     @Column(nullable = false)
-    private BigDecimal longitude;
+    private Date reviewTime;
 
     @Column(nullable = false)
-    private String address;
+    private String reviewText;
 
     @Column(nullable = false)
-    private String time;
+    private Integer reviewScore;
 
-    @Column(nullable = false)
-    private String phone;
+    @Column
+    private Integer reviewPic;
 
-    @Column(nullable = false)
-    private boolean heart;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Cafe cafe;
 
-    @Column(nullable = false)
-    private int review_cnt;
-
-    @Column(nullable = false)
-    private float avgScore;
-
-    @Builder
-    public Review(String name, BigDecimal latitude, BigDecimal longitude, String address, String time, String phone) {
-        this.cafe_name = name;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.address = address;
-        this.time = time;
-        this.phone = phone;
-        this.heart = false;
-        this.review_cnt = 0;
-        this.avgScore = 0f;
-    }
 }

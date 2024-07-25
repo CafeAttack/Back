@@ -1,11 +1,15 @@
 package com.cafeattack.springboot.Service;
 
 import com.cafeattack.springboot.Domain.Dto.request.AuthRequestDto;
+import com.cafeattack.springboot.Domain.Dto.request.menuPageRequestDto;
 import com.cafeattack.springboot.Domain.Entity.Member;
 import com.cafeattack.springboot.Exception.BadRequestException;
+import com.cafeattack.springboot.Repository.BookmarkRepository;
 import com.cafeattack.springboot.Repository.MemberRepository;
+import com.cafeattack.springboot.common.BaseResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MemberService {
     private final MemberRepository memberRepository;
-
+    private final BookmarkRepository bookmarkRepository;
     // email 인증 코드 추가해야
 
 
@@ -47,6 +51,22 @@ public class MemberService {
 
     private Member convertToMember(AuthRequestDto authRequestDto) {
         return new Member(authRequestDto);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity menu_Page(Integer member_id) {
+        Member member = memberRepository.findById(member_id).get();
+        if(member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400,"오류가 발생하였습니다"));
+
+        int favor_count = 0;
+        favor_count = (int) bookmarkRepository.countByMemberId(member_id);
+
+        menuPageRequestDto MenuPageRequestDto = menuPageRequestDto.builder()
+                .nickname(member.getName())
+                .favor_count(favor_count).build();
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "메뉴가 열렸습니다.", MenuPageRequestDto));
     }
 }
 

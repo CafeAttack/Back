@@ -8,6 +8,8 @@ import com.cafeattack.springboot.common.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import com.cafeattack.springboot.Domain.Dto.request.AuthRequestDto;
+import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,4 +28,11 @@ public class MemberController {
     BaseErrorResponse handleBadRequestException(Exception e) {
         return new BaseErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage());
     }
+
+    @GetMapping("/member/{memberid}/menu")
+    public ResponseEntity menu_Page(@PathVariable("memberid") int memberid) {
+        return memberService.menu_Page(memberid);
+    }
+
+
 }
