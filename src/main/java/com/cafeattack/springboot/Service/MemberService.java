@@ -1,6 +1,7 @@
 package com.cafeattack.springboot.Service;
 
 import com.cafeattack.springboot.Domain.Dto.request.AuthRequestDto;
+import com.cafeattack.springboot.Domain.Dto.request.memberPageRequestDto;
 import com.cafeattack.springboot.Domain.Dto.request.menuPageRequestDto;
 import com.cafeattack.springboot.Domain.Entity.Member;
 import com.cafeattack.springboot.Exception.BadRequestException;
@@ -67,6 +68,22 @@ public class MemberService {
                 .favor_count(favor_count).build();
 
         return ResponseEntity.status(200).body(new BaseResponse(200, "메뉴가 열렸습니다.", MenuPageRequestDto));
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity reset_Info(Integer member_id) {
+        Member member = memberRepository.findById(member_id).get();
+        if(member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "정보를 불러오는 도중 오류가 발생하였습니다."));
+
+        memberPageRequestDto MemberPageRequestDto = memberPageRequestDto.builder()
+                .signid(member.getSignid())
+                .name(member.getName())
+                .nickname(member.getNickname())
+                .email(member.getEmail())
+                .birth(member.getBirth()).build();
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, MemberPageRequestDto));
     }
 }
 

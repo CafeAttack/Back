@@ -12,9 +12,9 @@ import java.util.Date;
 @NoArgsConstructor
 @Builder
 public class memberPageRequestDto {
-    private String sign_id;
+    private String signid;
     private String name;
     private String nickname;
-    private String e_mail;
+    private String email;
     private Date birth;
 }
