@@ -38,4 +38,19 @@ public class MemberController {
     public ResponseEntity resetinfo_Page(@PathVariable("memberid") int memberid) {
         return memberService.reset_Info(memberid);
     }
+
+    @GetMapping("/member/{memberid}/personal-policy")
+    public ResponseEntity PersonalPolicy() {
+        return memberService.PersonalPolicy_Page();
+    }
+
+    @GetMapping("/member/{memberid}/location-policy")
+    public ResponseEntity LocationPolicy() {
+        return memberService.LocationPolicy_Page();
+    }
+
+    @GetMapping("/member/{memberid}/handling-policy")
+    public ResponseEntity HandlingPolicy() {
+        return memberService.HandlingPolicy_Page();
+    }
 }
