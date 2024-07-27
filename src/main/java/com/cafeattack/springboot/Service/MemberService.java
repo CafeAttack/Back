@@ -85,5 +85,18 @@ public class MemberService {
 
         return ResponseEntity.status(200).body(new BaseResponse(200, MemberPageRequestDto));
     }
+
+    @Transactional
+    public ResponseEntity PersonalPolicy_Page() {
+        return ResponseEntity.status(200).body(new BaseResponse(200, "페이지를 불러옵니다."));
+    }
+
+    public ResponseEntity LocationPolicy_Page() {
+        return ResponseEntity.status(200).body(new BaseResponse(200, "페이지를 불러옵니다."));
+    }
+
+    public ResponseEntity HandlingPolicy_Page() {
+        return ResponseEntity.status(200).body(new BaseResponse(200, "페이지를 불러옵니다."));
+    }
 }
 
