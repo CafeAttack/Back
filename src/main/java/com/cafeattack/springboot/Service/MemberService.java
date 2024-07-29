@@ -1,6 +1,7 @@
 package com.cafeattack.springboot.Service;
 
 import com.cafeattack.springboot.Domain.Dto.request.AuthRequestDto;
+import com.cafeattack.springboot.Domain.Dto.request.changeInfoRequestDto;
 import com.cafeattack.springboot.Domain.Dto.request.memberPageRequestDto;
 import com.cafeattack.springboot.Domain.Dto.request.menuPageRequestDto;
 import com.cafeattack.springboot.Domain.Entity.Member;
@@ -87,14 +88,33 @@ public class MemberService {
     }
 
     @Transactional
+    public ResponseEntity change_Info(Integer member_id, changeInfoRequestDto ChangeInfoRequestDto) {
+        String password = ChangeInfoRequestDto.getPassword().trim();
+        String CheckPassword = ChangeInfoRequestDto.getCheckPassword().trim();
+        if(!password.equals(CheckPassword))
+            return ResponseEntity.status(401).body(new BaseResponse(401, "비밀번호가 일치하지 않습니다."));
+
+        Member member = memberRepository.findById(member_id).get();
+        if(member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
+
+        member.setNickname(ChangeInfoRequestDto.getNickname());
+        member.setPassword(ChangeInfoRequestDto.getPassword());
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "수정이 완료되었습니다."));
+    }
+
+    @Transactional
     public ResponseEntity PersonalPolicy_Page() {
         return ResponseEntity.status(200).body(new BaseResponse(200, "페이지를 불러옵니다."));
     }
 
+    @Transactional
     public ResponseEntity LocationPolicy_Page() {
         return ResponseEntity.status(200).body(new BaseResponse(200, "페이지를 불러옵니다."));
     }
 
+    @Transactional
     public ResponseEntity HandlingPolicy_Page() {
         return ResponseEntity.status(200).body(new BaseResponse(200, "페이지를 불러옵니다."));
     }
