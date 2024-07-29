@@ -39,6 +39,13 @@ public class MemberController {
         return memberService.reset_Info(memberid);
     }
 
+    @PatchMapping("/member/{memberid}/reset-info")
+    public ResponseEntity change_info(@PathVariable("memberid") int memberid
+                                        , @RequestBody changeInfoRequestDto ChangeInfoRequestDto) {
+        return memberService.change_Info(memberid, ChangeInfoRequestDto);
+    }
+
+
     @GetMapping("/member/{memberid}/personal-policy")
     public ResponseEntity PersonalPolicy() {
         return memberService.PersonalPolicy_Page();
