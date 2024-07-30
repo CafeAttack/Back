@@ -1,6 +1,7 @@
 package com.cafeattack.springboot.Service;
 
 import com.cafeattack.springboot.Domain.Dto.request.AuthRequestDto;
+import com.cafeattack.springboot.Domain.Dto.request.addbookmarkDto;
 import com.cafeattack.springboot.Domain.Dto.request.changeInfoRequestDto;
 import com.cafeattack.springboot.Domain.Dto.request.menuPageRequestDto;
 import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageResponseDto;
@@ -8,10 +9,7 @@ import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageCafeResponseDto
 import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageCategoryResposeDto;
 import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageGroupResponseDto;
 import com.cafeattack.springboot.Domain.Dto.response.memberPageResponseDto;
-import com.cafeattack.springboot.Domain.Entity.Cafe;
-import com.cafeattack.springboot.Domain.Entity.CafeCategoryPK;
-import com.cafeattack.springboot.Domain.Entity.Category;
-import com.cafeattack.springboot.Domain.Entity.Member;
+import com.cafeattack.springboot.Domain.Entity.*;
 import com.cafeattack.springboot.Exception.BadRequestException;
 import com.cafeattack.springboot.Repository.BookmarkRepository;
 import com.cafeattack.springboot.Repository.CafeRepository;
@@ -24,6 +22,7 @@ import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.print.Book;
 import java.sql.SQLOutput;
 import java.util.*;
 
@@ -174,5 +173,29 @@ public class MemberService {
         return ResponseEntity.status(200).body(new BaseResponse(200, "즐겨찾기가 열렸습니다.", BookmarkPageResponseDto));
     }
 
+    @Transactional
+    public ResponseEntity addBookmark(Integer member_id, addbookmarkDto AddBookmarkDto) {
+        System.out.println(AddBookmarkDto);
+        Member member = memberRepository.findById(member_id).get();
+        if(member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
+
+        String groupName = bookmarkRepository.getGroupNameByGroupid(AddBookmarkDto.getGroupId());
+        Integer memberId = bookmarkRepository.getMemberidByGroupid(AddBookmarkDto.getGroupId());
+
+        System.out.println(AddBookmarkDto.getGroupId() + " " + memberId + " " + groupName + " " + AddBookmarkDto.getCafeId());
+        GroupCafePK relation = new GroupCafePK();
+        relation.setCafeid(AddBookmarkDto.getCafeId());
+        relation.setGroupid(AddBookmarkDto.getGroupId());
+
+        Bookmark bookmark = Bookmark.builder()
+                .relation(relation)
+                .memberid(memberId)
+                .groupname(groupName).build();
+
+        bookmarkRepository.save(bookmark);
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "추가가 완료되었습니다."));
+    }
 }
 
