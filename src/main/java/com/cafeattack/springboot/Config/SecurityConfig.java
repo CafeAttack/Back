@@ -26,7 +26,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/signup", "/member/{member_id}/menu", "/member/{member_id}/reset-info"
                         , "/member/{member_id}/personal-policy", "/member/{member_id}/handling-policy"
-                        , "/member/{member_id}/handling-policy", "/member/{memberid}/bookmark", "/member/{memberid}/add-bookmark")
+                        , "/member/{member_id}/handling-policy", "/member/{memberid}/bookmark", "/member/{memberid}/add-bookmark"
+                        , "/member/{member_id}/add-group")
                         .permitAll()
                         .anyRequest().authenticated()
                 )

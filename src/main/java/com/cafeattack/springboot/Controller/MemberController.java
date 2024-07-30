@@ -69,7 +69,12 @@ public class MemberController {
     @PostMapping("/member/{memberid}/add-bookmark")
     public ResponseEntity addBookmark(@PathVariable("memberid") int memberid
                                         , @RequestBody addbookmarkDto AddbookmarkDto) {
-        System.out.println(AddbookmarkDto);
         return memberService.addBookmark(memberid, AddbookmarkDto);
+    }
+
+    @PostMapping("/member/{memberid}/add-group")
+    public ResponseEntity addGroup(@PathVariable("memberid") int memberid,
+                                   @RequestBody addGroupDto AddGroupDto) {
+        return memberService.addGroup(memberid, AddGroupDto);
     }
 }
