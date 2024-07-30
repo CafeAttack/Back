@@ -18,7 +18,7 @@ public class Cafe {
     private Integer cafeid;
 
     @Column(nullable = false)
-    private String cafeName;
+    private String cafename;
 
     @Column(nullable = false)
     private BigDecimal latitude;

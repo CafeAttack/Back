@@ -21,7 +21,7 @@ public class Bookmark {
     public Integer memberid;
 
     @Column
-    public String groupName;
+    public String groupname;
 
     @Column
     public Integer cafeid;

@@ -1,4 +1,4 @@
-package com.cafeattack.springboot.Domain.Dto.request;
+package com.cafeattack.springboot.Domain.Dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class memberPageRequestDto {
+public class memberPageResponseDto {
     private String signid;
     private String name;
     private String nickname;
