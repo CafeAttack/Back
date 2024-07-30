@@ -1,9 +1,6 @@
 package com.cafeattack.springboot.Service;
 
-import com.cafeattack.springboot.Domain.Dto.request.AuthRequestDto;
-import com.cafeattack.springboot.Domain.Dto.request.addbookmarkDto;
-import com.cafeattack.springboot.Domain.Dto.request.changeInfoRequestDto;
-import com.cafeattack.springboot.Domain.Dto.request.menuPageRequestDto;
+import com.cafeattack.springboot.Domain.Dto.request.*;
 import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageResponseDto;
 import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageCafeResponseDto;
 import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageCategoryResposeDto;
@@ -196,6 +193,25 @@ public class MemberService {
         bookmarkRepository.save(bookmark);
 
         return ResponseEntity.status(200).body(new BaseResponse(200, "추가가 완료되었습니다."));
+    }
+
+    @Transactional
+    public ResponseEntity addGroup(Integer member_id, addGroupDto AddGroupDto) {
+        Member member = memberRepository.findById(member_id).get();
+        if(member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
+
+        GroupCafePK relation = new GroupCafePK();
+        relation.setCafeid(0);
+        Integer newGroupId = bookmarkRepository.getMaxGroupid() + 1;
+        relation.setGroupid(newGroupId);
+        Bookmark bookmark = Bookmark.builder()
+                .relation(relation)
+                .groupname(AddGroupDto.getGroupName())
+                .memberid(member_id).build();
+        bookmarkRepository.save(bookmark);
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "그룹이 추가되었습니다.", newGroupId));
     }
 }
 
