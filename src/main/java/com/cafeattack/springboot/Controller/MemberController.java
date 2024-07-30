@@ -60,4 +60,9 @@ public class MemberController {
     public ResponseEntity HandlingPolicy() {
         return memberService.HandlingPolicy_Page();
     }
+
+    @GetMapping("/member/{memberid}/bookmark")
+    public ResponseEntity bookmark_page(@PathVariable("memberid") int memberid) {
+        return memberService.bookmark_Page(memberid);
+    }
 }
