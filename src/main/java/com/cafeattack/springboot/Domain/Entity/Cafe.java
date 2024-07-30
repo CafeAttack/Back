@@ -40,11 +40,4 @@ public class Cafe {
 
     @Column
     private BigDecimal avg_score;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "groupid")
-    private Bookmark bookmark;
-
-    @OneToMany(mappedBy = "reviewid", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Review> reviews;
 }

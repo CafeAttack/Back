@@ -37,9 +37,6 @@ public class Member {
     @Column(name = "birth", nullable = false)
     private Date birth;
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<Bookmark> bookmarks = new ArrayList<>();
-
     @Builder
     public Member(String signId, String name, String nickname,
                   String email, String password, Date birth) {

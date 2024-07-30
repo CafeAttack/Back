@@ -34,8 +34,4 @@ public class Review {
 
     @Column
     private Integer reviewPic;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Cafe cafe;
-
 }

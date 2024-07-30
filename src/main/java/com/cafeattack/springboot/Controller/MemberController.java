@@ -65,4 +65,11 @@ public class MemberController {
     public ResponseEntity bookmark_page(@PathVariable("memberid") int memberid) {
         return memberService.bookmark_Page(memberid);
     }
+
+    @PostMapping("/member/{memberid}/add-bookmark")
+    public ResponseEntity addBookmark(@PathVariable("memberid") int memberid
+                                        , @RequestBody addbookmarkDto AddbookmarkDto) {
+        System.out.println(AddbookmarkDto);
+        return memberService.addBookmark(memberid, AddbookmarkDto);
+    }
 }
