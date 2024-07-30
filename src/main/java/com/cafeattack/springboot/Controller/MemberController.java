@@ -42,7 +42,7 @@ public class MemberController {
 
     @PatchMapping("/member/{memberid}/reset-info")
     public ResponseEntity change_info(@PathVariable("memberid") int memberid
-                                        , @RequestBody changeInfoRequestDto ChangeInfoRequestDto) {
+            , @RequestBody changeInfoRequestDto ChangeInfoRequestDto) {
         return memberService.change_Info(memberid, ChangeInfoRequestDto);
     }
 
@@ -69,7 +69,7 @@ public class MemberController {
 
     @PostMapping("/member/{memberid}/add-bookmark")
     public ResponseEntity addBookmark(@PathVariable("memberid") int memberid
-                                        , @RequestBody addbookmarkDto AddbookmarkDto) {
+            , @RequestBody addbookmarkDto AddbookmarkDto) {
         return memberService.addBookmark(memberid, AddbookmarkDto);
     }
 
@@ -83,5 +83,11 @@ public class MemberController {
     public ResponseEntity deleteBookmark(@PathVariable("memberid") int memberid,
                                          @RequestBody deleteBookmarkDto DeleteBookmarkDto) {
         return memberService.deleteBookmark(memberid, DeleteBookmarkDto);
+    }
+
+    @DeleteMapping("/member/{memberid}/delete-group")
+    public ResponseEntity deleteGroup(@PathVariable("memberid") int memberid,
+                                      @RequestBody deleteGroupDto DeleteGroupDto) {
+        return memberService.deleteGroup(memberid,DeleteGroupDto);
     }
 }

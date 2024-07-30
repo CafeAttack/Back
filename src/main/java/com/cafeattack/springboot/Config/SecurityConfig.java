@@ -27,7 +27,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/signup", "/member/{member_id}/menu", "/member/{member_id}/reset-info"
                         , "/member/{member_id}/personal-policy", "/member/{member_id}/handling-policy"
                         , "/member/{member_id}/handling-policy", "/member/{memberid}/bookmark", "/member/{memberid}/add-bookmark"
-                        , "/member/{member_id}/add-group", "/member/{member_id}/delete-bookmark")
+                        , "/member/{member_id}/add-group", "/member/{member_id}/delete-bookmark", "member/{memberid}/delete-group")
                         .permitAll()
                         .anyRequest().authenticated()
                 )
