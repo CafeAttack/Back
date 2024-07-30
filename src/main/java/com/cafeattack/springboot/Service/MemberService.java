@@ -13,6 +13,7 @@ import com.cafeattack.springboot.Repository.CafeRepository;
 import com.cafeattack.springboot.Repository.CategoryRepository;
 import com.cafeattack.springboot.Repository.MemberRepository;
 import com.cafeattack.springboot.common.BaseResponse;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
@@ -223,7 +224,6 @@ public class MemberService {
         GroupCafePK relation = new GroupCafePK();
         relation.setCafeid(DeleteBookmarkDto.getCafeId());
         List<Integer> groups = bookmarkRepository.findAllgroupidByCafeid(DeleteBookmarkDto.getCafeId());
-        System.out.println("[ " + groups.size() + " ] : " + groups);
         for(int i = 0; i < groups.size(); i++) {
             relation.setGroupid(groups.get(i));
             Bookmark bookmark = Bookmark.builder()
@@ -232,21 +232,34 @@ public class MemberService {
                     .memberid(bookmarkRepository.getMemberidByGroupid(relation.getGroupid())).build();
             if(bookmark.getMemberid().equals(member_id)) {
                 bookmarkRepository.delete(bookmark);
-                List<Bookmark> rest = bookmarkRepository.findAll();
-                for(int j = 0; j < rest.size(); j++) {
-                    System.out.println(rest.get(j).relation);
-                }
-                System.out.println("---------------------------------------------");
             }
         }
 
-        List<Bookmark> rest = bookmarkRepository.findAll();
-        for(int j = 0; j < rest.size(); j++) {
-            System.out.println(rest.get(j).relation);
-        }
-        System.out.println("---------------------------------------------");
-
         return ResponseEntity.status(200).body(new BaseResponse(200, "제거가 완료되었습니다."));
+    }
+
+    @Transactional
+    public ResponseEntity deleteGroup(Integer member_id, deleteGroupDto DeleteGroupDto) {
+        Member member = memberRepository.findById(member_id).get();
+        if(member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 유저가 없습니다."));
+
+        List<Integer> cafes = bookmarkRepository.findAllcafeByGroupid(DeleteGroupDto.getGroupId());
+        if(cafes.size() != 1)
+            return ResponseEntity.status(401).body(new BaseResponse(401, "오류가 발생하였습니다."));
+        else {
+            GroupCafePK relation = new GroupCafePK();
+            relation.setCafeid(0);
+            relation.setGroupid(DeleteGroupDto.getGroupId());
+
+            Bookmark bookmark = Bookmark.builder()
+                    .relation(relation)
+                    .memberid(member_id)
+                    .groupname(bookmarkRepository.getGroupNameByGroupid(DeleteGroupDto.getGroupId())).build();
+            bookmarkRepository.delete(bookmark);
+
+            return ResponseEntity.status(200).body(new BaseResponse(200, "제거가 완료되었습니다."));
+        }
     }
 }
 
