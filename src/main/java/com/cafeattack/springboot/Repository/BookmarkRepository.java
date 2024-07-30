@@ -27,4 +27,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Integer>{
 
     @Query("SELECT Max(b.relation.groupid) FROM Bookmark b")
     Integer getMaxGroupid();
+
+    @Query("SELECT b.relation.groupid FROM Bookmark b WHERE b.relation.cafeid = :cafeid")
+    List<Integer> findAllgroupidByCafeid(@Param("cafeid") Integer cafeid);
 }

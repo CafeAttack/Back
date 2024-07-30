@@ -213,5 +213,40 @@ public class MemberService {
 
         return ResponseEntity.status(200).body(new BaseResponse(200, "그룹이 추가되었습니다.", newGroupId));
     }
+
+    @Transactional
+    public ResponseEntity deleteBookmark(Integer member_id, deleteBookmarkDto DeleteBookmarkDto) {
+        Member member = memberRepository.findById(member_id).get();
+        if(member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 유저가 없습니다."));
+
+        GroupCafePK relation = new GroupCafePK();
+        relation.setCafeid(DeleteBookmarkDto.getCafeId());
+        List<Integer> groups = bookmarkRepository.findAllgroupidByCafeid(DeleteBookmarkDto.getCafeId());
+        System.out.println("[ " + groups.size() + " ] : " + groups);
+        for(int i = 0; i < groups.size(); i++) {
+            relation.setGroupid(groups.get(i));
+            Bookmark bookmark = Bookmark.builder()
+                    .relation(relation)
+                    .groupname(bookmarkRepository.getGroupNameByGroupid(relation.getGroupid()))
+                    .memberid(bookmarkRepository.getMemberidByGroupid(relation.getGroupid())).build();
+            if(bookmark.getMemberid().equals(member_id)) {
+                bookmarkRepository.delete(bookmark);
+                List<Bookmark> rest = bookmarkRepository.findAll();
+                for(int j = 0; j < rest.size(); j++) {
+                    System.out.println(rest.get(j).relation);
+                }
+                System.out.println("---------------------------------------------");
+            }
+        }
+
+        List<Bookmark> rest = bookmarkRepository.findAll();
+        for(int j = 0; j < rest.size(); j++) {
+            System.out.println(rest.get(j).relation);
+        }
+        System.out.println("---------------------------------------------");
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "제거가 완료되었습니다."));
+    }
 }
 

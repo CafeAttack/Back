@@ -7,6 +7,7 @@ import com.cafeattack.springboot.common.BaseErrorResponse;
 import com.cafeattack.springboot.common.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.method.P;
 import org.springframework.web.bind.annotation.*;
 import com.cafeattack.springboot.Domain.Dto.request.AuthRequestDto;
 import org.springframework.http.ResponseEntity;
@@ -76,5 +77,11 @@ public class MemberController {
     public ResponseEntity addGroup(@PathVariable("memberid") int memberid,
                                    @RequestBody addGroupDto AddGroupDto) {
         return memberService.addGroup(memberid, AddGroupDto);
+    }
+
+    @DeleteMapping("/member/{memberid}/delete-bookmark")
+    public ResponseEntity deleteBookmark(@PathVariable("memberid") int memberid,
+                                         @RequestBody deleteBookmarkDto DeleteBookmarkDto) {
+        return memberService.deleteBookmark(memberid, DeleteBookmarkDto);
     }
 }
