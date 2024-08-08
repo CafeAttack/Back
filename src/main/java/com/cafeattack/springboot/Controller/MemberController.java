@@ -53,6 +53,12 @@ public class MemberController {
         return memberService.logout(servletRequest);
     }
 
+    // 회원탈퇴
+    @DeleteMapping("/member/{memberid}/signout")
+    public ResponseEntity signout(@PathVariable Integer memberid) {
+        return memberService.signout(memberid);
+    }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(BadRequestException.class)
     BaseErrorResponse handleBadRequestException(Exception e) {
@@ -119,9 +125,4 @@ public class MemberController {
                                       @RequestBody deleteGroupDto DeleteGroupDto) {
         return memberService.deleteGroup(memberid,DeleteGroupDto);
     }
-
-    // 로그아웃
-
-
-    // 회원탈퇴
 }

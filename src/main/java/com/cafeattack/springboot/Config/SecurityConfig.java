@@ -60,6 +60,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.DELETE, possibleAccess).permitAll()
                                 .requestMatchers(HttpMethod.PATCH, possibleAccess).permitAll()
                                 .requestMatchers("/member/{memberid}/logout").permitAll()
+                                .requestMatchers("/member/{memberid}/signout").permitAll()
                                 .requestMatchers("/member/**").authenticated()
                                 .anyRequest().authenticated()
                 );

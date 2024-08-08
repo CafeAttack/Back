@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.yaml.snakeyaml.representer.BaseRepresenter;
 
 import java.awt.print.Book;
 import java.sql.SQLOutput;
@@ -344,5 +345,17 @@ public class MemberService {
     }
 
     // 회원탈퇴
+    @Transactional
+    public ResponseEntity signout(Integer memberid) {
+        try {
+            memberRepository.deleteById(memberid);
+        } catch (BaseException baseException) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new BaseErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "회원탈퇴 실패"));
+        }
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new BaseResponse(HttpStatus.OK.value(), "회원탈퇴 완료"));
+    }
 }
 
