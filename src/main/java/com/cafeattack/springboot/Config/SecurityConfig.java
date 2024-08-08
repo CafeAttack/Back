@@ -59,22 +59,11 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT, possibleAccess).permitAll()
                                 .requestMatchers(HttpMethod.DELETE, possibleAccess).permitAll()
                                 .requestMatchers(HttpMethod.PATCH, possibleAccess).permitAll()
+                                .requestMatchers("/member/{memberid}/logout").permitAll()
+                                .requestMatchers("/member/**").authenticated()
                                 .anyRequest().authenticated()
                 );
-        /*
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/auth/signup", "/member/{member_id}/menu", "/member/{member_id}/reset-info"
-                        , "/member/{member_id}/personal-policy", "/member/{member_id}/handling-policy"
-                        , "/member/{member_id}/handling-policy", "/member/{memberid}/bookmark", "/member/{memberid}/add-bookmark"
-                        , "/member/{member_id}/add-group", "/member/{member_id}/delete-bookmark", "member/{memberid}/delete-group")
-                        .permitAll()
-                        .anyRequest().authenticated()
-                )
-                .httpBasic(Customizer.withDefaults());
 
-         */
         http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
