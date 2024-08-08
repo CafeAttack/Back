@@ -38,3 +38,12 @@ out/
 
 ### postgreSQL 관련 정보 ###
 application-db.properties
+
+### JWT 관련 정보 ###
+applicaton-jwt.properties
+
+### Redis 관련 정보 ###
+application-redis.properties
+
+### Email 관련 정보 ###
+application-email.properties
