@@ -324,10 +324,16 @@ public class MemberService {
     // 로그아웃
     @Transactional
     public ResponseEntity logout(HttpServletRequest request) {
-        String token = jwtTokenProvider.resolveToken(request);
+        String accessToken = request.getHeader("Authorization");
+        if (accessToken != null && accessToken.startsWith("Bearer ")) {
+            accessToken = accessToken.substring(7);
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new BaseErrorResponse(HttpStatus.FORBIDDEN.value(), "유효하지 않은 Access Token"));
+        }
 
         try {
-            jwtTokenProvider.logoutToken(token);
+            jwtTokenProvider.logoutToken(accessToken);
         } catch (BaseException baseException) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new BaseErrorResponse(HttpStatus.FORBIDDEN.value(), baseException.getMessage()));

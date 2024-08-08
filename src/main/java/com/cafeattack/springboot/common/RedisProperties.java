@@ -14,6 +14,8 @@ public class RedisProperties {
     private int port;
     @Value("${spring.data.redis.host}")
     private String host;
+    @Value("${spring.data.redis.password}")
+    private String password;
 
     public int getPort() {
         return this.port;
@@ -21,5 +23,9 @@ public class RedisProperties {
 
     public String getHost() {
         return this.host;
+    }
+
+    public String getPassword() {
+        return this.password;
     }
 }
