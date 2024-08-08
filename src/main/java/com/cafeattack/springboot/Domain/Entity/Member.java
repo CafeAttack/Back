@@ -2,9 +2,11 @@ package com.cafeattack.springboot.Domain.Entity;
 
 import com.cafeattack.springboot.Domain.Dto.request.AuthRequestDto;
 import com.cafeattack.springboot.Exception.BadRequestException;
+import com.cafeattack.springboot.Repository.MemberRepository;
 import jakarta.persistence.*;
 import lombok.*;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.awt.print.Book;
 import java.util.ArrayList;
@@ -15,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 public class Member {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer memberid;
@@ -56,5 +59,19 @@ public class Member {
         this.email = authRequestDto.getEmail();
         this.password = authRequestDto.getPassword();
         this.birth = authRequestDto.getBirth();
+    }
+
+    public UsernamePasswordAuthenticationToken getAuthenticationToken() {
+        return new UsernamePasswordAuthenticationToken(signid, password);
+    }
+
+    public int getMemberid() {
+        return memberid;
+    }
+
+    public void validatePassword(String password) {
+        if (!password.equals(this.password)) {
+            throw new BadRequestException("비밀번호 일치하지 않음");
+        }
     }
 }
