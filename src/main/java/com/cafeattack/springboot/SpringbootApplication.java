@@ -15,6 +15,7 @@ public class SpringbootApplication {
 		SpringApplication.run(SpringbootApplication.class, args);
 	}
 
+
 	/*
 	// 임시로 추가
 	@Bean

@@ -15,6 +15,7 @@ import com.cafeattack.springboot.Repository.MemberRepository;
 import com.cafeattack.springboot.common.BaseResponse;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
+import lombok.var;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.stereotype.Service;
