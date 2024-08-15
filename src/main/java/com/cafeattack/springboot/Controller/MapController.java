@@ -23,7 +23,7 @@ public class MapController {
     private final MapService mapService;
 
     @GetMapping(value = "/map", produces = "application/json;charset=UTF-8")
-    public String getAllCafe(                             @RequestParam("radius") int radius) {
-        return mapService.getAllCafeFromMap(radius);
+    public String getAllCafe(@RequestParam("radius") String longitude, String latitude, int radius) {
+        return mapService.getAllCafeFromMap(longitude, latitude, radius);
     }
 }

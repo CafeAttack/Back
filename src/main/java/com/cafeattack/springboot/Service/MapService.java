@@ -22,13 +22,14 @@ public class MapService {
 
     private final String apiKey;
 
-    public String getAllCafeFromMap(int radius) {
+    public String getAllCafeFromMap(String longitude, String latitude, int radius) {
         String apiUrl = "https://dapi.kakao.com/v2/local/search/category.json";
         String jsonString  = null;
 
         try {
             // URL 구성
-            String addr = apiUrl + "?category_group_code=CE7&radius=" + radius;
+            String addr = apiUrl + "?category_group_code=CE7" + "&x=" + longitude + "&y=" + latitude + "&radius="
+                    + radius + "&sort=distance";
             URL url = new URL(addr);
             URLConnection connection = url.openConnection();
             connection.setRequestProperty("Authorization", "KakaoAK" + apiKey);
