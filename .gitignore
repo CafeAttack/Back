@@ -47,3 +47,6 @@ application-redis.properties
 
 ### Email 관련 정보 ###
 application-email.properties
+
+### Kakao REST API 관련 정보 ###
+application-map.properties
