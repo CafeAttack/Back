@@ -1,25 +1,30 @@
 package com.cafeattack.springboot.Service;
 
+import com.cafeattack.springboot.Config.Jwt.JwtTokenProvider;
 import com.cafeattack.springboot.Domain.Dto.request.*;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageResponseDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageCafeResponseDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageCategoryResposeDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageGroupResponseDto;
-import com.cafeattack.springboot.Domain.Dto.response.memberPageResponseDto;
+import com.cafeattack.springboot.Domain.Dto.response.*;
 import com.cafeattack.springboot.Domain.Entity.*;
 import com.cafeattack.springboot.Exception.BadRequestException;
+import com.cafeattack.springboot.Exception.BaseException;
 import com.cafeattack.springboot.Repository.BookmarkRepository;
 import com.cafeattack.springboot.Repository.CafeRepository;
 import com.cafeattack.springboot.Repository.CategoryRepository;
 import com.cafeattack.springboot.Repository.MemberRepository;
+import com.cafeattack.springboot.common.BaseErrorResponse;
 import com.cafeattack.springboot.common.BaseResponse;
+import com.cafeattack.springboot.common.RandomKey;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.var;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.yaml.snakeyaml.representer.BaseRepresenter;
 
 import java.awt.print.Book;
 import java.sql.SQLOutput;
@@ -33,17 +38,65 @@ public class MemberService {
     private final BookmarkRepository bookmarkRepository;
     private final CafeRepository cafeRepository;
     private final CategoryRepository categoryRepository;
-    // email 인증 코드 추가해야
+    private final EmailService emailService;
 
+    // email 인증 코드
+    private String emailCode;
 
-    // jwt 토큰 관련 추가해야
-
+    // jwt 토큰 관련
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     // 회원가입
     @Transactional
     public void join(AuthRequestDto authRequestDto) {
         validateAuthReqeust(authRequestDto);
+        validateDuplicateEmail(authRequestDto.getEmail());  // 이 자리에 있는게 맞나
         memberRepository.save(convertToMember(authRequestDto));
+    }
+
+    // 이메일 인증
+    @Transactional
+    public void verifyEmailCode (String code) {
+        if (isEmailVerified(code)) return;
+        throw new BadRequestException("인증번호가 일치하지 않습니다.");
+    }
+
+    // 로그인
+    @Transactional (readOnly = true)
+    public authLoginResponse login(String singId, String password) {
+        Member member = getMemberById(singId);
+        member.validatePassword(password);
+        return new authLoginResponse(member.getName()
+                        , jwtTokenProvider.generateToken(member));
+    }
+
+    @Transactional
+    public void validateEmailRequest(String email) {
+        System.out.println("1. validateEmailRequest 시작");
+        validateDuplicateEmail(email);
+        createVerificationCode();
+        System.out.println("3. createVerificationCode 완료");
+        emailService.sendValidateEmailRequestMessage(email, getVerificationCode());
+    }
+
+    private boolean isEmailVerified(String code) {
+        return emailCode.equals(code);
+    }
+
+    private void createVerificationCode() {
+        emailCode = RandomKey.createKey();
+    }
+
+    private String getVerificationCode() {
+        return emailCode;
+    }
+
+    private void validateDuplicateEmail(String email) {
+        System.out.println("2. validateDuplicateEmail 시작");
+        if (!memberRepository.findByEmail(email).stream().toList().isEmpty()) {  // 수정해야하나...?
+            throw new BadRequestException("이미 회원가입된 이메일");
+        }
     }
 
     private void validateAuthReqeust(AuthRequestDto authRequestDto) {
@@ -261,6 +314,48 @@ public class MemberService {
 
             return ResponseEntity.status(200).body(new BaseResponse(200, "제거가 완료되었습니다."));
         }
+    }
+
+    private Member getMemberById(String signId) {
+        return memberRepository.findBySignid(signId).stream()
+                .findFirst()
+                .orElseThrow(()->new BadRequestException("회원가입되지 않은 이메일"));
+    }
+
+    // 로그아웃
+    @Transactional
+    public ResponseEntity logout(HttpServletRequest request) {
+        String accessToken = request.getHeader("Authorization");
+        if (accessToken != null && accessToken.startsWith("Bearer ")) {
+            accessToken = accessToken.substring(7);
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new BaseErrorResponse(HttpStatus.FORBIDDEN.value(), "유효하지 않은 Access Token"));
+        }
+
+        try {
+            jwtTokenProvider.logoutToken(accessToken);
+        } catch (BaseException baseException) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new BaseErrorResponse(HttpStatus.FORBIDDEN.value(), baseException.getMessage()));
+        }
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new BaseResponse(HttpStatus.OK.value(), "로그아웃 완료"));
+    }
+
+    // 회원탈퇴
+    @Transactional
+    public ResponseEntity signout(Integer memberid) {
+        try {
+            memberRepository.deleteById(memberid);
+        } catch (BaseException baseException) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new BaseErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "회원탈퇴 실패"));
+        }
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new BaseResponse(HttpStatus.OK.value(), "회원탈퇴 완료"));
     }
 }
 
