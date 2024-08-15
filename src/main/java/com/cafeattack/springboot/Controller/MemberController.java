@@ -97,32 +97,5 @@ public class MemberController {
         return memberService.HandlingPolicy_Page();
     }
 
-    @GetMapping("/member/{memberid}/bookmark")
-    public ResponseEntity bookmark_page(@PathVariable("memberid") int memberid) {
-        return memberService.bookmark_Page(memberid);
-    }
 
-    @PostMapping("/member/{memberid}/add-bookmark")
-    public ResponseEntity addBookmark(@PathVariable("memberid") int memberid
-            , @RequestBody addbookmarkDto AddbookmarkDto) {
-        return memberService.addBookmark(memberid, AddbookmarkDto);
-    }
-
-    @PostMapping("/member/{memberid}/add-group")
-    public ResponseEntity addGroup(@PathVariable("memberid") int memberid,
-                                   @RequestBody addGroupDto AddGroupDto) {
-        return memberService.addGroup(memberid, AddGroupDto);
-    }
-
-    @DeleteMapping("/member/{memberid}/delete-bookmark")
-    public ResponseEntity deleteBookmark(@PathVariable("memberid") int memberid,
-                                         @RequestBody deleteBookmarkDto DeleteBookmarkDto) {
-        return memberService.deleteBookmark(memberid, DeleteBookmarkDto);
-    }
-
-    @DeleteMapping("/member/{memberid}/delete-group")
-    public ResponseEntity deleteGroup(@PathVariable("memberid") int memberid,
-                                      @RequestBody deleteGroupDto DeleteGroupDto) {
-        return memberService.deleteGroup(memberid,DeleteGroupDto);
-    }
 }
