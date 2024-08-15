@@ -32,7 +32,7 @@ public class MapService {
                     + radius + "&sort=distance";
             URL url = new URL(addr);
             URLConnection connection = url.openConnection();
-            connection.setRequestProperty("Authorization", "KakaoAK" + apiKey);
+            connection.setRequestProperty("Authorization", "KakaoAK " + apiKey);
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
             StringBuffer docJson = new StringBuffer();
             String line;
