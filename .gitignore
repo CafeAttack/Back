@@ -47,3 +47,6 @@ application-redis.properties
 
 ### Email 관련 정보 ###
 application-email.properties
+
+###database 관련 정보 ###
+databaseInput.py
