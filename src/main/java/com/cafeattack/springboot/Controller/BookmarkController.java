@@ -1,9 +1,6 @@
 package com.cafeattack.springboot.Controller;
 
-import com.cafeattack.springboot.Domain.Dto.request.addGroupDto;
-import com.cafeattack.springboot.Domain.Dto.request.addbookmarkDto;
-import com.cafeattack.springboot.Domain.Dto.request.deleteBookmarkDto;
-import com.cafeattack.springboot.Domain.Dto.request.deleteGroupDto;
+import com.cafeattack.springboot.Domain.Dto.request.*;
 import com.cafeattack.springboot.Service.BookmarkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +14,12 @@ public class BookmarkController {
     @GetMapping("/member/{memberid}/bookmark")
     public ResponseEntity bookmark_page(@PathVariable("memberid") int memberid) {
         return bookmarkService.bookmark_Page(memberid);
+    }
+
+    @GetMapping("/member/{memberid}/add-bookmark")
+    public ResponseEntity getPageforEdit(@PathVariable("memberid") int memberid
+            , @RequestParam int cafeId) {
+        return bookmarkService.getPageforEdit(memberid, cafeId);
     }
 
     @PostMapping("/member/{memberid}/add-bookmark")

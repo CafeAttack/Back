@@ -1,13 +1,7 @@
 package com.cafeattack.springboot.Service;
 
-import com.cafeattack.springboot.Domain.Dto.request.addGroupDto;
-import com.cafeattack.springboot.Domain.Dto.request.addbookmarkDto;
-import com.cafeattack.springboot.Domain.Dto.request.deleteBookmarkDto;
-import com.cafeattack.springboot.Domain.Dto.request.deleteGroupDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageCafeResponseDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageCategoryResposeDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageGroupResponseDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageResponseDto;
+import com.cafeattack.springboot.Domain.Dto.request.*;
+import com.cafeattack.springboot.Domain.Dto.response.*;
 import com.cafeattack.springboot.Domain.Entity.Bookmark;
 import com.cafeattack.springboot.Domain.Entity.GroupCafePK;
 import com.cafeattack.springboot.Domain.Entity.Member;
@@ -75,8 +69,35 @@ public class BookmarkService {
     }
 
     @Transactional
+    public ResponseEntity getPageforEdit(Integer member_id, Integer cafeId) {
+        Member member = memberRepository.findById(member_id).get();
+        if(member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
+
+        bookmarkPageforEditDto BookmarkPageforEditDto = new bookmarkPageforEditDto();
+        BookmarkPageforEditDto.setGroups(new ArrayList<>());
+        List<Integer> allgroupId = bookmarkRepository.findAllgroupidByMemberId(member_id);
+        for(int i = 0; i < allgroupId.size(); i++) {
+            bookmarkPageforEditGroupDto group = new bookmarkPageforEditGroupDto();
+
+            group.setGroupId(allgroupId.get(i));
+            group.setGroupName(bookmarkRepository.getGroupNameByGroupid(allgroupId.get(i)));
+            boolean checked = false;
+            List<Integer> allcafeId = bookmarkRepository.findAllcafeByGroupid(allgroupId.get(i));
+            for(int j = 0; j < allcafeId.size(); j++) {
+                if(allcafeId.get(j) == cafeId) {
+                    checked = true;
+                }
+            }
+            group.setChecked(checked);
+            BookmarkPageforEditDto.groups.add(group);
+        }
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "즐겨찾기 추가 화면입니다.", BookmarkPageforEditDto));
+    }
+
+    @Transactional
     public ResponseEntity addBookmark(Integer member_id, addbookmarkDto AddBookmarkDto) {
-        System.out.println(AddBookmarkDto);
         Member member = memberRepository.findById(member_id).get();
         if(member == null)
             return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
@@ -84,7 +105,6 @@ public class BookmarkService {
         String groupName = bookmarkRepository.getGroupNameByGroupid(AddBookmarkDto.getGroupId());
         Integer memberId = bookmarkRepository.getMemberidByGroupid(AddBookmarkDto.getGroupId());
 
-        System.out.println(AddBookmarkDto.getGroupId() + " " + memberId + " " + groupName + " " + AddBookmarkDto.getCafeId());
         GroupCafePK relation = new GroupCafePK();
         relation.setCafeid(AddBookmarkDto.getCafeId());
         relation.setGroupid(AddBookmarkDto.getGroupId());
