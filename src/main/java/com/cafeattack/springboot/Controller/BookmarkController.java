@@ -34,12 +34,6 @@ public class BookmarkController {
         return bookmarkService.addGroup(memberid, AddGroupDto);
     }
 
-    @DeleteMapping("/member/{memberid}/delete-bookmark")
-    public ResponseEntity deleteBookmark(@PathVariable("memberid") int memberid,
-                                         @RequestBody deleteBookmarkDto DeleteBookmarkDto) {
-        return bookmarkService.deleteBookmark(memberid, DeleteBookmarkDto);
-    }
-
     @DeleteMapping("/member/{memberid}/delete-group")
     public ResponseEntity deleteGroup(@PathVariable("memberid") int memberid,
                                       @RequestBody deleteGroupDto DeleteGroupDto) {

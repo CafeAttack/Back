@@ -6,9 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class getbookmarkDto {
-    private int cafeId;
+public class addbookmarkInfoDto {
+    private Integer groupId;
+    private boolean checked;
 }
