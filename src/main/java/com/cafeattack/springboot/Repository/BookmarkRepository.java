@@ -1,9 +1,13 @@
 package com.cafeattack.springboot.Repository;
 
 import com.cafeattack.springboot.Domain.Entity.Bookmark;
+import com.cafeattack.springboot.Domain.Entity.GroupCafePK;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import javax.management.relation.Relation;
+import javax.swing.*;
 import java.util.List;
 
 public interface BookmarkRepository extends JpaRepository<Bookmark, Integer>{
@@ -30,4 +34,13 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Integer>{
 
     @Query("SELECT b.relation.groupid FROM Bookmark b WHERE b.relation.cafeid = :cafeid")
     List<Integer> findAllgroupidByCafeid(@Param("cafeid") Integer cafeid);
+
+    @Query("SELECT COUNT(b) FROM Bookmark b where b.relation.groupid = :groupid")
+    long countByGroupid(@Param("groupid") Integer groupid);
+
+    @Query("SELECT b.relation.cafeid From Bookmark b where b.relation.groupid = :groupid")
+    List<Integer> findAllcafeidByGroupid(@Param("groupid") Integer groupid);
+
+    @Query("SELECT b from Bookmark b where b.relation = :relation")
+    Bookmark findByRelation(@Param("relation") GroupCafePK relation);
 }

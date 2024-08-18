@@ -4,13 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.List;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class addbookmarkDto {
-    private Integer cafeId;
-    public List<addbookmarkInfoDto> groups;
+public class addbookmarkInfoDto {
+    private Integer groupId;
+    private boolean checked;
 }

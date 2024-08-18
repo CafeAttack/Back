@@ -1,13 +1,7 @@
 package com.cafeattack.springboot.Service;
 
-import com.cafeattack.springboot.Domain.Dto.request.addGroupDto;
-import com.cafeattack.springboot.Domain.Dto.request.addbookmarkDto;
-import com.cafeattack.springboot.Domain.Dto.request.deleteBookmarkDto;
-import com.cafeattack.springboot.Domain.Dto.request.deleteGroupDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageCafeResponseDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageCategoryResposeDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageGroupResponseDto;
-import com.cafeattack.springboot.Domain.Dto.response.bookmarkPageResponseDto;
+import com.cafeattack.springboot.Domain.Dto.request.*;
+import com.cafeattack.springboot.Domain.Dto.response.*;
 import com.cafeattack.springboot.Domain.Entity.Bookmark;
 import com.cafeattack.springboot.Domain.Entity.GroupCafePK;
 import com.cafeattack.springboot.Domain.Entity.Member;
@@ -18,11 +12,14 @@ import com.cafeattack.springboot.Repository.MemberRepository;
 import com.cafeattack.springboot.common.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -75,26 +72,76 @@ public class BookmarkService {
     }
 
     @Transactional
-    public ResponseEntity addBookmark(Integer member_id, addbookmarkDto AddBookmarkDto) {
-        System.out.println(AddBookmarkDto);
+    public ResponseEntity getPageforEdit(Integer member_id, Integer cafeId) {
         Member member = memberRepository.findById(member_id).get();
         if(member == null)
             return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
 
-        String groupName = bookmarkRepository.getGroupNameByGroupid(AddBookmarkDto.getGroupId());
-        Integer memberId = bookmarkRepository.getMemberidByGroupid(AddBookmarkDto.getGroupId());
+        bookmarkPageforEditDto BookmarkPageforEditDto = new bookmarkPageforEditDto();
+        BookmarkPageforEditDto.setGroups(new ArrayList<>());
+        List<Integer> allgroupId = bookmarkRepository.findAllgroupidByMemberId(member_id);
+        for(int i = 0; i < allgroupId.size(); i++) {
+            bookmarkPageforEditGroupDto group = new bookmarkPageforEditGroupDto();
 
-        System.out.println(AddBookmarkDto.getGroupId() + " " + memberId + " " + groupName + " " + AddBookmarkDto.getCafeId());
-        GroupCafePK relation = new GroupCafePK();
-        relation.setCafeid(AddBookmarkDto.getCafeId());
-        relation.setGroupid(AddBookmarkDto.getGroupId());
+            group.setGroupId(allgroupId.get(i));
+            group.setGroupName(bookmarkRepository.getGroupNameByGroupid(allgroupId.get(i)));
+            boolean checked = false;
+            List<Integer> allcafeId = bookmarkRepository.findAllcafeByGroupid(allgroupId.get(i));
+            for(int j = 0; j < allcafeId.size(); j++) {
+                if(allcafeId.get(j) == cafeId) {
+                    checked = true;
+                }
+            }
+            group.setChecked(checked);
+            BookmarkPageforEditDto.groups.add(group);
+        }
 
-        Bookmark bookmark = Bookmark.builder()
-                .relation(relation)
-                .memberid(memberId)
-                .groupname(groupName).build();
+        return ResponseEntity.status(200).body(new BaseResponse(200, "즐겨찾기 추가 화면입니다.", BookmarkPageforEditDto));
+    }
 
-        bookmarkRepository.save(bookmark);
+    @Transactional
+    public ResponseEntity addBookmark(Integer member_id, addbookmarkDto AddBookmarkDto) {
+        Member member = memberRepository.findById(member_id).get();
+        if(member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
+
+        for(int j = 0; j < AddBookmarkDto.groups.size(); j++) {
+            boolean isChecked = false;
+            if(AddBookmarkDto.groups.get(j).isChecked()) {
+                for(int k = 0; k < bookmarkRepository.countByGroupid(AddBookmarkDto.groups.get(j).getGroupId()); k++) {
+                    if(AddBookmarkDto.getCafeId() == bookmarkRepository.findAllcafeidByGroupid(AddBookmarkDto.groups.get(j).getGroupId()).get(k)) {
+                        isChecked = true;
+                    }
+                }
+                if(!isChecked) {
+                    GroupCafePK relation = new GroupCafePK();
+                    relation.setGroupid(AddBookmarkDto.groups.get(j).getGroupId());
+                    relation.setCafeid(AddBookmarkDto.getCafeId());
+                    Bookmark bookmark = Bookmark.builder()
+                            .relation(relation)
+                            .memberid(member_id)
+                            .groupname(bookmarkRepository.getGroupNameByGroupid(AddBookmarkDto.groups.get(j).getGroupId()))
+                            .build();
+                    bookmarkRepository.save(bookmark);
+                }
+            }
+            else {
+                isChecked = true;
+                for(int k = 0; k < bookmarkRepository.countByGroupid(AddBookmarkDto.groups.get(j).getGroupId()); k++) {
+                    if(AddBookmarkDto.getCafeId() == bookmarkRepository.findAllcafeidByGroupid(AddBookmarkDto.groups.get(j).getGroupId()).get(k)) {
+                        isChecked = false;
+                    }
+                }
+                if(!isChecked) {
+                    GroupCafePK relation = new GroupCafePK();
+                    relation.setGroupid(AddBookmarkDto.groups.get(j).getGroupId());
+                    relation.setCafeid(AddBookmarkDto.getCafeId());
+                    Bookmark bookmark = bookmarkRepository.findByRelation(relation);
+
+                    bookmarkRepository.delete(bookmark);
+                }
+            }
+        }
 
         return ResponseEntity.status(200).body(new BaseResponse(200, "추가가 완료되었습니다."));
     }
@@ -116,29 +163,6 @@ public class BookmarkService {
         bookmarkRepository.save(bookmark);
 
         return ResponseEntity.status(200).body(new BaseResponse(200, "그룹이 추가되었습니다.", newGroupId));
-    }
-
-    @Transactional
-    public ResponseEntity deleteBookmark(Integer member_id, deleteBookmarkDto DeleteBookmarkDto) {
-        Member member = memberRepository.findById(member_id).get();
-        if(member == null)
-            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 유저가 없습니다."));
-
-        GroupCafePK relation = new GroupCafePK();
-        relation.setCafeid(DeleteBookmarkDto.getCafeId());
-        List<Integer> groups = bookmarkRepository.findAllgroupidByCafeid(DeleteBookmarkDto.getCafeId());
-        for(int i = 0; i < groups.size(); i++) {
-            relation.setGroupid(groups.get(i));
-            Bookmark bookmark = Bookmark.builder()
-                    .relation(relation)
-                    .groupname(bookmarkRepository.getGroupNameByGroupid(relation.getGroupid()))
-                    .memberid(bookmarkRepository.getMemberidByGroupid(relation.getGroupid())).build();
-            if(bookmark.getMemberid().equals(member_id)) {
-                bookmarkRepository.delete(bookmark);
-            }
-        }
-
-        return ResponseEntity.status(200).body(new BaseResponse(200, "제거가 완료되었습니다."));
     }
 
     @Transactional

@@ -1,4 +1,4 @@
-package com.cafeattack.springboot.Domain.Dto.request;
+package com.cafeattack.springboot.Domain.Dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,10 +7,9 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class addbookmarkDto {
-    private Integer cafeId;
-    public List<addbookmarkInfoDto> groups;
+public class bookmarkPageforEditDto {
+    public List<bookmarkPageforEditGroupDto> groups;
 }
