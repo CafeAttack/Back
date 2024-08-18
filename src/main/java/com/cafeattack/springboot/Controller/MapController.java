@@ -23,13 +23,39 @@ public class MapController {
 
     private final MapService mapService;
 
+    /*
+    // 카페 정보 받아올것임
     @GetMapping(value = "/main", produces = "application/json;charset=UTF-8")
     public String getAllCafe (@RequestParam("longitude") String longitude,
                               @RequestParam("latitude") String latitude,
                               @RequestParam("radius") int radius) {
-        return mapService.getAllCafeFromMap(longitude, latitude, radius);
+        return mapService.getCafeInformsFromMap(longitude, latitude, radius);
+    } */
+
+    // 카테고리 관계없이 모든 카페 지도에서 불러오기
+    @GetMapping(value = "/main", produces = "application/json;charset=UTF-8")
+    public String getCafes (@RequestParam("longitude") String longitude,
+                            @RequestParam("latitude") String latitude,
+                            @RequestParam("radius") int radius) {
+        return mapService.getAllCafesFromMap(longitude, latitude, radius);
     }
 
+    // 카테고리별 카페 지도에서 보기
+    @GetMapping(value = "/main/{categoryId}", produces = "application/json;charset=UTF-8")
+    public String getAllCafe (@PathVariable("categoryId") int categoryId,
+                                @RequestParam("longitude") String longitude,
+                              @RequestParam("latitude") String latitude,
+                              @RequestParam("radius") int radius) {
+        return mapService.getCafeFromMap(categoryId, longitude, latitude, radius);
+    }
+
+    // 카페 선택 (간략한 정보)
+
+
+    // 카페 정보 더보기
+
+
+    // 카페 검색
     @GetMapping(value = "/search", produces = "application/json;charset=UTF-8")
     public String searchCafesByKeyword(@RequestParam("longitude") String longitude,
                                        @RequestParam("latitude") String latitude,
