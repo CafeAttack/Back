@@ -46,6 +46,7 @@ public class MapService {
     @Value("${spring.datasource.password}")
     private String dbPassword;
 
+    // 카테고리 관계 없이 모든 카페 지도에서 보기
     public String getAllCafesFromMap(String longitude, String latitude, int radius) {
         String apiUrl = "https://dapi.kakao.com/v2/local/search/category.json";
         String jsonString  = null;
