@@ -72,23 +72,19 @@ public class MapService {
             JsonNode jsonNode = objectMapper.readTree(jsonString);
             ArrayNode documents = (ArrayNode)jsonNode.get("documents");
 
-
             ArrayNode filteredDocuments = objectMapper.createArrayNode();
-            filteredDocuments.addAll(documents);
 
-            /*
             for (JsonNode place : documents) {
                 String categoryName = place.get("category_name").asText();
 
                 ObjectNode filteredPlace = objectMapper.createObjectNode();
-                filteredPlace.put("category_name", place.get("category_name").asText());
                 filteredPlace.put("id", place.get("id").asText());
                 filteredPlace.put("place_name", place.get("place_name").asText());
                 filteredPlace.put("x", place.get("x").asText());
                 filteredPlace.put("y", place.get("y").asText());
                 // 제외해야할 정보 있으면 더 제외하기
                 filteredDocuments.add(filteredPlace);
-            }*/
+            }
 
             // 필터링된 결과 JSON 변환
             ((ObjectNode) jsonNode).set("documents", filteredDocuments);
@@ -131,38 +127,23 @@ public class MapService {
             ArrayNode documents = (ArrayNode)jsonNode.get("documents");
             ArrayNode filteredDocuments = objectMapper.createArrayNode();
 
-            if (categoryId == 1) {
-                for (JsonNode place : documents) {
-                    String categoryName = place.get("category_name").asText();
+            // DB에서 카테고리 ID로 필터링 된 카페 정보 가져오기
+            List<Cafe> cafes = categoryRepository.findByCategoryId(categoryId);
 
+            for (JsonNode place : documents) {
+                String placeId = place.get("id").asText();
+
+                if (cafes.stream().anyMatch(cafe -> String.valueOf(cafe.getCafeid()).equals(placeId))) {
                     ObjectNode filteredPlace = objectMapper.createObjectNode();
-                    filteredPlace.put("category_name", place.get("category_name").asText());
                     filteredPlace.put("id", place.get("id").asText());
                     filteredPlace.put("place_name", place.get("place_name").asText());
                     filteredPlace.put("x", place.get("x").asText());
                     filteredPlace.put("y", place.get("y").asText());
-                    // 제외해야할 정보 있으면 더 제외하기
                     filteredDocuments.add(filteredPlace);
-                }
-            } else if (categoryId >= 2 && categoryId <= 6) {
-                Set<String> dbCafeIds = new HashSet<>();
-                try (Connection dbConnection = dataSource.getConnection()) {
-                    String dbQuery = "SELECT c.cafeId FROM Cafe c JOIN Category cat ON c.cafeId = cat.cafeId WHERE cat.categoryId=?";
-                    try (PreparedStatement preparedStatement = dbConnection.prepareStatement(dbQuery)) {
-                        preparedStatement.setInt(1, categoryId);  // categoryId를 SQL 쿼리에 안전하게 바인딩
-                        try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                            while (resultSet.next()) {
-                                dbCafeIds.add(resultSet.getString("cafeId"));  // 조회된 cafeId를 HashSet에 추가
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
                 }
             }
 
-
-            // 필터링된 결과 JSON 변환
+            // 필터링 된 결과 JSON 변환
             ((ObjectNode) jsonNode).set("documents", filteredDocuments);
             jsonString = objectMapper.writeValueAsString(jsonNode);
 
@@ -173,6 +154,7 @@ public class MapService {
         }
         return jsonString;
     }
+
 
     // 카페 선택 (간략한 정보)
     public ResponseEntity<String> getShortCafes(String cafeId, int memberId) {
@@ -211,6 +193,7 @@ public class MapService {
             throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
         }
     }
+
 
     // 카페 검색 (ALL)
     public String searchAllCafe(String longitude, String latitude, int radius, String query) {
