@@ -1,7 +1,6 @@
 package com.cafeattack.springboot.Domain.Entity;
 
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +10,11 @@ import lombok.NoArgsConstructor;
 public class Category {
     @EmbeddedId
     private CafeCategoryPK relation;
+
+    @ManyToOne
+    @MapsId("cafeid")  // CafeCategoryPK의 cafeid와 매핑
+    @JoinColumn(name = "cafeid", insertable = false, updatable = false)
+    private Cafe cafe;
 
     public Category(CafeCategoryPK relation) {
         this.relation = relation;

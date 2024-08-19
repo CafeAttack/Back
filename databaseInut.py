@@ -46,7 +46,7 @@ def insert_data_to_db(cursor, data):
     conn.commit()
 
 if __name__ == "__main__":
-    for page in range(1, 46):  # 페이지를 4부터 45까지 반복합니다.
+    for page in range(1, 15):  # 페이지를 4부터 45까지 반복합니다.
         conn = connect_db(db_config)
         if conn is not None:
             api_url = 'https://dapi.kakao.com/v2/local/search/category.json'
@@ -57,7 +57,8 @@ if __name__ == "__main__":
                 'category_group_code': 'CE7',
                 'longitude': '127.05982',
                 'latitude': '37.619427',
-                'radius': '10000',
+                'radius': '2000',
+                'sort': 'distance',
                 'page': page  # page 변수를 삽입합니다.
             }
             print(f"Fetching data from page {page}")
