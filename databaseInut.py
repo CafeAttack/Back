@@ -35,39 +35,46 @@ def insert_data_to_db(cursor, data):
         x = p.get('x')
         y = p.get('y')
         address_name = p.get('road_address_name')
+        url = p.get('place_url')
 
         cursor.execute('SELECT 1 FROM cafe WHERE cafeid = %s', (id,))
         if cursor.fetchone() is not None:
             print(f"Skipping {id} / {place_name} as it already exists")
             continue
         
-        cursor.execute('INSERT INTO cafe (cafeid, cafename, latitude, longitude, address, phone) VALUES (%s, %s, %s, %s, %s, %s)', (id, place_name, y, x, address_name, phone))
+        cursor.execute('INSERT INTO cafe (cafeid, cafename, latitude, longitude, address, phone, time) VALUES (%s, %s, %s, %s, %s, %s, %s)', (id, place_name, y, x, address_name, phone, url))
         print(f"Inserting {id} / {place_name} into the database")
     conn.commit()
 
 if __name__ == "__main__":
-    for page in range(1, 46):  # 페이지를 4부터 45까지 반복합니다.
-        conn = connect_db(db_config)
-        if conn is not None:
-            api_url = 'https://dapi.kakao.com/v2/local/search/category.json'
-            headers = {
-                'Authorization': 'KakaoAK 1cb221b04b1df970647b9e7a7b9846d3'
-            }
-            params = {
-                'category_group_code': 'CE7',
-                'longitude': '127.05982',
-                'latitude': '37.619427',
-                'radius': '10000',
-                'page': page  # page 변수를 삽입합니다.
-            }
-            print(f"Fetching data from page {page}")
-            kakao_response = fetch_kakao_data(api_url, headers, params)
+    longitude = 127.006215
+    latitude = 37.656193
 
-            try:
-                insert_data_to_db(conn, kakao_response)
-                print(f"Successfully inserted data from page {page}")
-            except Exception as e:
-                print(f"Error inserting data: {e}")
-                conn.rollback()
-            finally:
-                conn.close()
+    for i in range(0, 55):
+        print(f"====================================={i} Row Finished=====================================")
+        for j in range(0, 38 ):
+            lefttop_x = longitude + (i * 0.002)
+            lefttop_y = latitude - (j * 0.002)
+            rightbottom_x = longitude + ((i + 1) * 0.002)
+            rightbottom_y = latitude - ((j + 1) * 0.002)
+            for page in range(1, 4):
+                conn = connect_db(db_config) 
+                if conn is not None:
+                    api_url = 'https://dapi.kakao.com/v2/local/search/category.json'
+                    headers = {
+                        'Authorization': 'KakaoAK 1cb221b04b1df970647b9e7a7b9846d3'
+                    }
+                    params = {
+                        'category_group_code': 'CE7',
+                        'rect': f'{lefttop_x},{lefttop_y},{rightbottom_x},{rightbottom_y}',
+                        'page': page
+                    }
+                    kakao_response = fetch_kakao_data(api_url, headers, params)
+
+                    try:
+                        insert_data_to_db(conn, kakao_response)
+                    except Exception as e:
+                        print(f"Error inserting data: {e}")
+                        conn.rollback()
+                    finally:
+                        conn.close()
