@@ -1,20 +1,9 @@
 package com.cafeattack.springboot.Controller;
 
-import com.cafeattack.springboot.Exception.BaseException;
 import com.cafeattack.springboot.Service.MapService;
-import com.cafeattack.springboot.common.BaseErrorResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
 
 @RestController
 @RequestMapping("/map")
@@ -23,18 +12,58 @@ public class MapController {
 
     private final MapService mapService;
 
+    /*
+    // 카페 정보 받아올것임
     @GetMapping(value = "/main", produces = "application/json;charset=UTF-8")
     public String getAllCafe (@RequestParam("longitude") String longitude,
                               @RequestParam("latitude") String latitude,
                               @RequestParam("radius") int radius) {
-        return mapService.getAllCafeFromMap(longitude, latitude, radius);
+        return mapService.getCafeInformsFromMap(longitude, latitude, radius);
+    } */
+
+    // 카테고리 관계없이 모든 카페 지도에서 불러오기
+    @GetMapping(value = "/main", produces = "application/json;charset=UTF-8")
+    public String getCafes (@RequestParam("longitude") String longitude,
+                            @RequestParam("latitude") String latitude,
+                            @RequestParam("radius") int radius) {
+        return mapService.getAllCafesFromMap(longitude, latitude, radius);
     }
 
+    // 카테고리별 카페 지도에서 보기
+    @GetMapping(value = "/main/{categoryId}", produces = "application/json;charset=UTF-8")
+    public String getAllCafe (@PathVariable("categoryId") int categoryId,
+                              @RequestParam("longitude") String longitude,
+                              @RequestParam("latitude") String latitude,
+                              @RequestParam("radius") int radius) {
+        return mapService.getCafeFromMap(categoryId, longitude, latitude, radius);
+    }
+
+    // 카페 선택 (간략한 정보)
+    @GetMapping(value = "/{cafeId}/{memberId}", produces = "application/json;charset=UTF-8")
+    public ResponseEntity<String> getShortInformations (@PathVariable("cafeId") String cafeId,
+                                                @PathVariable("memberId") Integer memberId) {
+        return mapService.getShortCafes(cafeId, memberId);
+    }
+
+    // 카페 정보 더보기
+
+
+    // 카페 검색 (ALL)
     @GetMapping(value = "/search", produces = "application/json;charset=UTF-8")
-    public String searchCafesByKeyword(@RequestParam("longitude") String longitude,
+    public String searchAllCafesByKeyword(@RequestParam("longitude") String longitude,
                                        @RequestParam("latitude") String latitude,
                                        @RequestParam("radius") int radius,
                                        @RequestParam("query") String query) {
-        return mapService.searchCafe(longitude, latitude, radius, query);
+        return mapService.searchAllCafe(longitude, latitude, radius, query);
+    }
+
+    // 카페 검색 (카테고리 별)
+    @GetMapping(value = "/search/{categoryId}", produces = "application/json;charset=UTF-8")
+    public ResponseEntity<String> searchCafesByKeyword(@RequestParam("longitude") String longitude,
+                                       @RequestParam("latitude") String latitude,
+                                       @RequestParam("radius") int radius,
+                                       @RequestParam("query") String query,
+                                       @PathVariable("categoryId") int categoryId) {
+        return mapService.searchCafe(longitude, latitude, radius, query, categoryId);
     }
 }

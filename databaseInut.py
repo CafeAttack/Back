@@ -51,7 +51,7 @@ if __name__ == "__main__":
     latitude = 37.656193
 
     for i in range(0, 55):
-        print(f"====================================={i} Row Finished=====================================")
+        print(f"====================================={i} Row Started=====================================")
         for j in range(0, 38 ):
             lefttop_x = longitude + (i * 0.002)
             lefttop_y = latitude - (j * 0.002)
