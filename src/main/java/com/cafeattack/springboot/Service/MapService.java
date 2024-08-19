@@ -17,7 +17,6 @@ import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.sql.DataSource;
@@ -46,89 +45,6 @@ public class MapService {
 
     @Value("${spring.datasource.password}")
     private String dbPassword;
-
-
-    // 정보 얻어오는 용도
-    public String getCafeInformsFromMap(String longitude, String latitude, int radius) {
-        String apiUrl = "https://dapi.kakao.com/v2/local/search/category.json";
-        List<JsonNode> allResults = new ArrayList<>();
-        Set<String> uniqueIds = new HashSet<>();  // 이미 수집된 데이터의 ID를 추적
-        int page = 1;
-        int total_count = 0;
-        int collected_count = 0;
-        int maxPage = 1;  // 초기 maxPage는 1로 설정, 첫 요청에서 계산됨
-
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            boolean isEnd = false;
-            while(page <= maxPage && !isEnd) {
-                // URL 구성
-                String addr = apiUrl + "?category_group_code=CE7" + "&x=" + longitude + "&y=" + latitude + "&radius="
-                        + radius + "&sort=distance&page=" + page;
-                URL url = new URL(addr);
-                URLConnection connection = url.openConnection();
-                connection.setRequestProperty("Authorization", "KakaoAK " + apiKey);
-
-                // 데이터 읽기
-                String jsonString;
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"))) {
-                    StringBuffer docJson = new StringBuffer();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        docJson.append(line);
-                    }
-                    jsonString = docJson.toString();
-                }
-                // JSON 파싱
-                JsonNode jsonNode = objectMapper.readTree(jsonString);
-                JsonNode documents = jsonNode.path("documents");
-
-                // 디버깅: 페이지 번호와 첫 번째 결과 출력
-                if (!documents.isEmpty()) {
-                    System.out.println("Page: " + page + ", First result: " + documents.get(0).toString());
-                }
-
-                // 첫 페이지에서 total_count 및 maxPage 계산
-                if (page == 1) {
-                    total_count = jsonNode.path("meta").path("total_count").asInt();
-                    maxPage = (int)Math.ceil(total_count/15.0);  // 실제 조회 가능한 페이지 수 계산
-                    System.out.println("Total_count:" + total_count + ", Max Page: " + maxPage);
-                }
-
-                for (JsonNode document : documents) {
-                    allResults.add(document);
-                }
-
-                // 수집된 결과 개수 업데이트
-                collected_count += documents.size();
-                System.out.println("Collected count: " + collected_count);
-
-                page++;
-            }
-            saveResultsToFile(allResults);
-
-            return "완료";
-
-        } catch (MalformedURLException e) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (IOException e) {
-            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
-        }
-    }
-
-    // 결과를 파일로 저장하는 메서드
-    private void saveResultsToFile(List<JsonNode> results) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        File file = new File("cafe_results.json");
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            String jsonString = objectMapper.writeValueAsString(results);
-            writer.write(jsonString);
-            System.out.println("API 결과가 파일에 저장되었습니다.: " + file.getAbsolutePath());
-        } catch (IOException e) {
-            System.err.println("파일 저장 중 오류 발생: " + e.getMessage());
-        }
-    }
 
     public String getAllCafesFromMap(String longitude, String latitude, int radius) {
         String apiUrl = "https://dapi.kakao.com/v2/local/search/category.json";
