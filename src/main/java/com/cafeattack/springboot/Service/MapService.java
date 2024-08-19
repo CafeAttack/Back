@@ -161,9 +161,11 @@ public class MapService {
         String jsonString = null;
 
         try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword)) {
-            // SQL 쿼리  -- 피그마 보고 더 추가하기
-            String query = "SELECT place_name, address_name, id, road_address_name From cafes " +
-                    "WHERE id = ?";
+            // SQL 쿼리  - 카페 정보 가져옴
+            String query = "SELECT cafename, avg_score, address, time, From cafes WHERE id = ?";
+
+            // 카페의 모든 카테고리 가져옴
+            String categoryQuery = "SELECT category FROM category WHERE cafeid = ?";
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setString(1, cafeId);
@@ -174,13 +176,39 @@ public class MapService {
                         ObjectMapper objectMapper = new ObjectMapper();
                         JsonNode cafeInfo = objectMapper.createObjectNode();
 
-                        ((ObjectNode) cafeInfo).put("place_name", resultSet.getString("place_name"));
-                        ((ObjectNode) cafeInfo).put("address_name", resultSet.getString("address_name"));
-                        ((ObjectNode) cafeInfo).put("id", resultSet.getString("id"));
-                        ((ObjectNode) cafeInfo).put("road_address_name", resultSet.getString("road_address_name"));
+                        ((ObjectNode) cafeInfo).put("cafename", resultSet.getString("cafename"));
+                        ((ObjectNode) cafeInfo).put("avg_score", resultSet.getBigDecimal("avg_score"));
+                        ((ObjectNode) cafeInfo).put("address", resultSet.getString("address"));
+                        ((ObjectNode) cafeInfo).put("time", resultSet.getString("time"));
+                        ((ObjectNode) cafeInfo).put("phone", resultSet.getString("phone"));
+
+                        StringBuilder categoryNames = new StringBuilder();
+
+                        // 카테고리 조회
+                        try (PreparedStatement categoryStatement = connection.prepareStatement(categoryQuery)) {
+                            categoryStatement.setString(1, cafeId);
+
+                            try (ResultSet categorySet = categoryStatement.executeQuery()) {
+                                while (categorySet.next()) {
+                                    int categoryId = categorySet.getInt("category");
+
+                                    String categoryName = getCategoryName(categoryId);
+                                    if (categoryName != null) {
+                                        if (categoryNames.length() > 0) {
+                                            categoryNames.append(" / ");
+                                        }
+                                        categoryNames.append(categoryName);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (categoryNames.length() > 0) {
+                            categoryNames.append(" 카페");
+                        }
+                        ((ObjectNode) cafeInfo).put("categories", categoryNames.toString());
 
                         jsonString = objectMapper.writeValueAsString(cafeInfo);
-
                         return ResponseEntity.ok(jsonString);
                     } else {
                         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cafe Not Found");
@@ -191,6 +219,18 @@ public class MapService {
             throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
         } catch (Exception e) {
             throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+        }
+    }
+
+    // 카테고리 이름 매핑 함수
+    private String getCategoryName(int categoryId) {
+        switch (categoryId) {
+            case 1: return "테이크 아웃";
+            case 2: return "감성";
+            case 3: return "프랜차이즈";
+            case 4: return "카공";
+            case 5: return "테마";
+            default: return null;
         }
     }
 
