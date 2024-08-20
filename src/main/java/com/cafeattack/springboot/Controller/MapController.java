@@ -14,19 +14,14 @@ public class MapController {
 
     // 카테고리 관계없이 모든 카페 지도에서 불러오기
     @GetMapping(value = "/main", produces = "application/json;charset=UTF-8")
-    public String getCafes (@RequestParam("longitude") String longitude,
-                            @RequestParam("latitude") String latitude,
-                            @RequestParam("radius") int radius) {
-        return mapService.getAllCafesFromMap(longitude, latitude, radius);
+    public String getCafes () {
+        return mapService.getAllCafesFromMap();
     }
 
     // 카테고리별 카페 지도에서 보기
     @GetMapping(value = "/main/{categoryId}", produces = "application/json;charset=UTF-8")
-    public String getAllCafe (@PathVariable("categoryId") int categoryId,
-                              @RequestParam("longitude") String longitude,
-                              @RequestParam("latitude") String latitude,
-                              @RequestParam("radius") int radius) {
-        return mapService.getCafeFromMap(categoryId, longitude, latitude, radius);
+    public String getAllCafe (@PathVariable("categoryId") int categoryId) {
+        return mapService.getCafeFromMap(categoryId);
     }
 
     // 카페 선택 (간략한 정보)
