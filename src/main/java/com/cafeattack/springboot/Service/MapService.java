@@ -223,7 +223,7 @@ public class MapService {
                 filteredPlace.put("place_name", place.get("place_name").asText());
                 filteredPlace.put("id", place.get("id").asText());
                 filteredPlace.put("road_address_name", place.get("road_address_name").asText());
-                filteredPlace.put("distance", place.get("distance").asText());
+                filteredPlace.put("distance", Integer.valueOf(place.get("distance").asText()));
                 filteredDocuments.add(filteredPlace);
             }
 
@@ -276,7 +276,7 @@ public class MapService {
                     filteredPlace.put("place_name", place.get("place_name").asText());
                     filteredPlace.put("id", place.get("id").asText());
                     filteredPlace.put("road_address_name", place.get("road_address_name").asText());
-                    filteredPlace.put("distance", place.get("distance").asText());
+                    filteredPlace.put("distance", Integer.valueOf(place.get("distance").asText()));
                     filteredDocuments.add(filteredPlace);
                 }
             }
