@@ -113,18 +113,21 @@ public class MapService {
 
 
     // 카페 선택 (간략한 정보)
-    public ResponseEntity<String> getShortCafes(String cafeId, int memberId) {
+    public ResponseEntity<String> getShortCafes(Integer cafeId, int memberId) {
         String jsonString = null;
 
         try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword)) {
             // SQL 쿼리  - 카페 정보 가져옴
-            String query = "SELECT cafename, avg_score, address, time, From cafes WHERE id = ?";
+            String query = "SELECT cafename, address, phone From cafe WHERE cafeid = ?";
 
             // 카페의 모든 카테고리 가져옴
             String categoryQuery = "SELECT category FROM category WHERE cafeid = ?";
 
+            // 사용자 그룹에서 북마크 여부 확인 - 존재 여부만 확인
+            String bookmarkQuery = "SELECT 1 FROM bookmark WHERE memberid = ? AND relation_cafeid = ?";
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setString(1, cafeId);
+                statement.setInt(1, cafeId);
 
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
@@ -133,16 +136,14 @@ public class MapService {
                         JsonNode cafeInfo = objectMapper.createObjectNode();
 
                         ((ObjectNode) cafeInfo).put("cafename", resultSet.getString("cafename"));
-                        ((ObjectNode) cafeInfo).put("avg_score", resultSet.getBigDecimal("avg_score"));
                         ((ObjectNode) cafeInfo).put("address", resultSet.getString("address"));
-                        ((ObjectNode) cafeInfo).put("time", resultSet.getString("time"));
                         ((ObjectNode) cafeInfo).put("phone", resultSet.getString("phone"));
 
                         StringBuilder categoryNames = new StringBuilder();
 
                         // 카테고리 조회
                         try (PreparedStatement categoryStatement = connection.prepareStatement(categoryQuery)) {
-                            categoryStatement.setString(1, cafeId);
+                            categoryStatement.setInt(1, cafeId);
 
                             try (ResultSet categorySet = categoryStatement.executeQuery()) {
                                 while (categorySet.next()) {
@@ -163,6 +164,20 @@ public class MapService {
                             categoryNames.append(" 카페");
                         }
                         ((ObjectNode) cafeInfo).put("categories", categoryNames.toString());
+
+                        // 북마크 여부 확인
+                        boolean isBookmarked = false;
+                        try (PreparedStatement bookmarkStatement = connection.prepareStatement(bookmarkQuery)) {
+                            bookmarkStatement.setInt(1, memberId);
+                            bookmarkStatement.setInt(2, cafeId);
+
+                            try (ResultSet bookmarkResultSet = bookmarkStatement.executeQuery()) {
+                                if (bookmarkResultSet.next()) {
+                                    isBookmarked = true;
+                                }
+                            }
+                        }
+                        ((ObjectNode) cafeInfo).put("isBookmarked", isBookmarked);
 
                         jsonString = objectMapper.writeValueAsString(cafeInfo);
                         return ResponseEntity.ok(jsonString);
