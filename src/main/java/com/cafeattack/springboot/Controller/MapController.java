@@ -26,7 +26,7 @@ public class MapController {
 
     // 카페 선택 (간략한 정보)
     @GetMapping(value = "/{cafeId}/{memberId}", produces = "application/json;charset=UTF-8")
-    public ResponseEntity<String> getShortInformations (@PathVariable("cafeId") String cafeId,
+    public ResponseEntity<String> getShortInformations (@PathVariable("cafeId") Integer cafeId,
                                                 @PathVariable("memberId") Integer memberId) {
         return mapService.getShortCafes(cafeId, memberId);
     }
