@@ -13,22 +13,13 @@ import com.cafeattack.springboot.Repository.MemberRepository;
 import com.cafeattack.springboot.common.BaseErrorResponse;
 import com.cafeattack.springboot.common.BaseResponse;
 import com.cafeattack.springboot.common.RandomKey;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.yaml.snakeyaml.representer.BaseRepresenter;
-
-import java.awt.print.Book;
-import java.sql.SQLOutput;
-import java.util.*;
 
 @Service
 @Transactional
