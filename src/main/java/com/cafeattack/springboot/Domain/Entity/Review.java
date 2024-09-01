@@ -3,13 +3,14 @@ package com.cafeattack.springboot.Domain.Entity;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
+import java.util.List;
 
-@Data
+@Getter
 @NoArgsConstructor
 @Entity
 public class Review {
@@ -21,17 +22,26 @@ public class Review {
     private Integer cafeid;
 
     @Column(nullable = false)
-    private String reviewWriter;
+    private String reviewwriter;
 
     @Column(nullable = false)
-    private Date reviewTime;
-
-    @Column(nullable = false)
-    private String reviewText;
-
-    @Column(nullable = false)
-    private Integer reviewScore;
+    private LocalDate reviewdate;
 
     @Column
-    private Integer reviewPic;
+    private String reviewtext;
+
+    @Column(nullable = false)
+    private Integer reviewscore;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reviewpics> reviewpics;
+
+    @Builder
+    public Review(Integer cafeid, String reviewwriter, LocalDate reviewdate, String reviewtext, Integer reviewscore) {
+        this.cafeid = cafeid;
+        this.reviewwriter = reviewwriter;
+        this.reviewdate = reviewdate;
+        this.reviewtext = reviewtext;
+        this.reviewscore = reviewscore;
+    }
 }
