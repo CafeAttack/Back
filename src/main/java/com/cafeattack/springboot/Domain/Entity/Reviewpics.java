@@ -1,6 +1,7 @@
 package com.cafeattack.springboot.Domain.Entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -18,4 +19,10 @@ public class Reviewpics {
     @ManyToOne
     @JoinColumn(name = "reviewid")
     private Review review;
+
+    @Builder
+    public Reviewpics(Review review, String picurl) {
+        this.review = review;
+        this.picurl = picurl;
+    }
 }

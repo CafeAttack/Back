@@ -9,6 +9,7 @@ import com.cafeattack.springboot.common.BaseErrorResponse;
 import com.cafeattack.springboot.common.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,10 +21,10 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final ReviewRepository reviewRepository;
 
-    @PostMapping(value = "/{memberid}/{cafeid}")
-    public ResponseEntity writeReview(@PathVariable("memberid") int memberid,
+    @PostMapping(value = "/{memberid}/{cafeid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> writeReview(@PathVariable("memberid") int memberid,
                                       @PathVariable("cafeid") int cafeid,
-                                      @RequestBody writeReviewRequestDto WritereviewRequestDto) {
+                                      @ModelAttribute writeReviewRequestDto WritereviewRequestDto) {
         try {
             reviewResponseDto ReviewResponseDto = reviewService.writeReviews(memberid, cafeid, WritereviewRequestDto);
             return ResponseEntity
