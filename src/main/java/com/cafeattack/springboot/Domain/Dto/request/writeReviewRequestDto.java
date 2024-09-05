@@ -1,15 +1,14 @@
 package com.cafeattack.springboot.Domain.Dto.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
-@Getter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class writeReviewRequestDto {
     private String reviewText;
     private Integer reviewScore;
+    private MultipartFile[] images;  // 이미지 배열
 }

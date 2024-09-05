@@ -53,3 +53,6 @@ databaseInput.py
 
 ### Kakao REST API 관련 정보 ###
 application-map.properties
+
+### AWS S3 관련 정보 ###
+application-S3.properties
