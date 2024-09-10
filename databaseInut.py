@@ -42,7 +42,7 @@ def insert_data_to_db(cursor, data):
             print(f"Skipping {id} / {place_name} as it already exists")
             continue
         
-        cursor.execute('INSERT INTO cafe (cafeid, cafename, latitude, longitude, address, phone, time) VALUES (%s, %s, %s, %s, %s, %s, %s)', (id, place_name, y, x, address_name, phone, url))
+        cursor.execute('INSERT INTO cafe (cafeid, cafename, latitude, longitude, address, phone, reviewCnt, avgScore, link) VALUES (%s, %s, %s, %s, %s, %s, %d, %d, %s)', (id, place_name, y, x, address_name, phone, 0, 0, url))
         print(f"Inserting {id} / {place_name} into the database")
     conn.commit()
 
