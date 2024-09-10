@@ -6,7 +6,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    String[] accessURL = {"http://localhost:8080","https://localhost:8080"};
+    String[] accessURL = {"http://localhost:8080","https://localhost:8080","http://3.39.172.187","https://3.39.172.187"};
     // 앱 주소로 바꿔야 함
 
     // CORS 설정 : 애플리케이션이 다른 도메인에서 오는 요청을 허용할 수 있게 함

@@ -22,21 +22,33 @@ public class S3Service {
         this.amazonS3 = amazonS3;
     }
 
-    public String uploadPics(MultipartFile file) {
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-
-        try {
-            // 파일 메타데이터 설정
-            ObjectMetadata objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentLength(file.getSize());
-            objectMetadata.setContentType(file.getContentType());
-
-            // S3에 파일 업로드
-            amazonS3.putObject(new PutObjectRequest(bucket, fileName, file.getInputStream(), objectMetadata)
-                    .withCannedAcl(CannedAccessControlList.PublicRead));
-            return amazonS3.getUrl(bucket, fileName).toExternalForm();
-        } catch (IOException e) {
-            throw new RuntimeException("파일 업로드 실패", e);
+    public String[] uploadPics(MultipartFile[] files) {
+        if (files == null || files.length == 0) {
+            return new String[0];
         }
+
+        String[] imageUrls = new String[files.length];
+        int index = 0;
+
+        for (MultipartFile file : files) {
+            try {
+                String fileName = UUID.randomUUID().toString() + "-" + file.getOriginalFilename();
+                // 파일 메타데이터 설정
+                ObjectMetadata objectMetadata = new ObjectMetadata();
+                objectMetadata.setContentType(file.getContentType());
+                objectMetadata.setContentLength(file.getSize());
+
+                // S3에 파일 업로드
+                amazonS3.putObject(new PutObjectRequest(bucket, fileName, file.getInputStream(), objectMetadata)
+                        .withCannedAcl(CannedAccessControlList.PublicRead));
+
+                // S3 URL 생성
+                imageUrls[index++] = amazonS3.getUrl(bucket, fileName).toString();
+            } catch (IOException e) {
+                throw new RuntimeException("파일 업로드 실패", e);
+            }
+        }
+        return imageUrls;
     }
 }
+
