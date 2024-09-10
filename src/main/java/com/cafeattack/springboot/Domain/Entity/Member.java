@@ -2,16 +2,11 @@ package com.cafeattack.springboot.Domain.Entity;
 
 import com.cafeattack.springboot.Domain.Dto.request.AuthRequestDto;
 import com.cafeattack.springboot.Exception.BadRequestException;
-import com.cafeattack.springboot.Repository.MemberRepository;
 import jakarta.persistence.*;
 import lombok.*;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-import java.awt.print.Book;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 @Data
 @NoArgsConstructor

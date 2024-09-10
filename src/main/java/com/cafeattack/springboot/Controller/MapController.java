@@ -12,15 +12,6 @@ public class MapController {
 
     private final MapService mapService;
 
-    /*
-    // 카페 정보 받아올것임
-    @GetMapping(value = "/main", produces = "application/json;charset=UTF-8")
-    public String getAllCafe (@RequestParam("longitude") String longitude,
-                              @RequestParam("latitude") String latitude,
-                              @RequestParam("radius") int radius) {
-        return mapService.getCafeInformsFromMap(longitude, latitude, radius);
-    } */
-
     // 카테고리 관계없이 모든 카페 지도에서 불러오기
     @GetMapping(value = "/main", produces = "application/json;charset=UTF-8")
     public String getCafes (@RequestParam("longitude") String longitude,
@@ -40,7 +31,7 @@ public class MapController {
 
     // 카페 선택 (간략한 정보)
     @GetMapping(value = "/{cafeId}/{memberId}", produces = "application/json;charset=UTF-8")
-    public ResponseEntity<String> getShortInformations (@PathVariable("cafeId") String cafeId,
+    public ResponseEntity<String> getShortInformations (@PathVariable("cafeId") Integer cafeId,
                                                 @PathVariable("memberId") Integer memberId) {
         return mapService.getShortCafes(cafeId, memberId);
     }
