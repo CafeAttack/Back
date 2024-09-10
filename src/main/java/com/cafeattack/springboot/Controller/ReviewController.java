@@ -21,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class ReviewController {
 
-    private static final Logger log = LoggerFactory.getLogger(ReviewController.class);
     private final ReviewService reviewService;
     private final ReviewRepository reviewRepository;
 
@@ -32,7 +31,6 @@ public class ReviewController {
                                          @RequestParam("reviewScore") Integer reviewScore,
                                          @RequestParam(value = "images", required = false)MultipartFile[] images) {
         try {
-            log.info(images.toString());
             writeReviewRequestDto WriteReviewRequestDto = writeReviewRequestDto.builder()
                     .reviewText(reviewText)
                     .reviewScore(reviewScore)
