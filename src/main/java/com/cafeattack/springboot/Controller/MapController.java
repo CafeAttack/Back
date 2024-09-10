@@ -37,6 +37,11 @@ public class MapController {
     }
 
     // 카페 정보 더보기
+    @GetMapping(value = "/{cafeId}/{memberId}/more", produces = "application/json;charset=UTF-8")
+    public ResponseEntity<String> getMoreInformations (@PathVariable("cafeId") Integer cafeId,
+                                                       @PathVariable("memberId") Integer memberId) {
+        return mapService.getMoreCafes(cafeId, memberId);
+    }
 
 
     // 카페 검색 (ALL)
