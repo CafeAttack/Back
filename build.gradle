@@ -43,6 +43,9 @@ dependencies {
 	// AMAZON S3
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
+	// postgreSQL
+	implementation 'org.postgresql:postgresql:42.6.0'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'org.postgresql:postgresql'

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Data
 @NoArgsConstructor
@@ -16,8 +18,9 @@ public class Reviewpics {
     @Column(nullable = false)
     private String picurl;
 
-    @ManyToOne
-    @JoinColumn(name = "reviewid")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewid", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Review review;
 
     @Builder
