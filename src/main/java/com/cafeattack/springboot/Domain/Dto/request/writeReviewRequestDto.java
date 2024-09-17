@@ -10,5 +10,5 @@ import org.springframework.web.multipart.MultipartFile;
 public class writeReviewRequestDto {
     private String reviewText;
     private Integer reviewScore;
-    private MultipartFile[] images;  // 이미지 배열
+    private MultipartFile[] images;
 }

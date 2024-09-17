@@ -28,7 +28,6 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final MemberRepository memberRepository;
     private final S3Service s3Service;
-    private final AmazonS3Client amazonS3Client;
 
     @Transactional
     public reviewResponseDto writeReviews(int memberid, int cafeid, writeReviewRequestDto WriteReviewRequestDto) {
@@ -42,10 +41,8 @@ public class ReviewService {
         // 현재 날짜 가져오기
         LocalDate currentDate = LocalDate.now();
 
-        log.info("Review Score: " + WriteReviewRequestDto.getReviewScore());
-        log.info("Review Text: " + WriteReviewRequestDto.getReviewText());
-        log.info("Images: " + (WriteReviewRequestDto.getImages() != null ? WriteReviewRequestDto.getImages().length : "No images"));
-
+        // images 저장 링크 받아오기
+        String[] imageUrls = s3Service.uploadPics(WriteReviewRequestDto.getImages());
 
         // Dto 정보로 Review 객체 생성
         Review review = Review.builder()
@@ -60,16 +57,15 @@ public class ReviewService {
         Review saveReview = reviewRepository.save(review);
 
         // S3에 이미지 업로드 및 URL 저장
-        if (WriteReviewRequestDto.getImages() != null) {
-            if (WriteReviewRequestDto.getImages().length > 5) {
+        if (imageUrls != null && imageUrls.length > 0){
+            if (imageUrls.length > 5) {
                 throw new BaseException(HttpStatus.BAD_REQUEST.value(), "사진은 최대 5장까지 업로드 가능합니다");
             }
-            for (MultipartFile image : WriteReviewRequestDto.getImages()) {
-                String imageUrl = s3Service.uploadPics(image);
-                Reviewpics reviewpic = Reviewpics.builder()
+            for (String imageUrl : imageUrls) {
+                Reviewpics reviewpics = Reviewpics.builder()
                         .review(saveReview)
                         .picurl(imageUrl).build();
-                saveReview.getReviewpics().add(reviewpic);
+                saveReview.getReviewpics().add(reviewpics);
 
             }
         }
