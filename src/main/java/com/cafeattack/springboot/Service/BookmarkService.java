@@ -3,7 +3,7 @@ package com.cafeattack.springboot.Service;
 import com.cafeattack.springboot.Domain.Dto.request.*;
 import com.cafeattack.springboot.Domain.Dto.response.*;
 import com.cafeattack.springboot.Domain.Entity.Bookmark;
-import com.cafeattack.springboot.Domain.Entity.GroupCafePK;
+import com.cafeattack.springboot.Domain.Entity.mapping.GroupCafePK;
 import com.cafeattack.springboot.Domain.Entity.Member;
 import com.cafeattack.springboot.Repository.BookmarkRepository;
 import com.cafeattack.springboot.Repository.CafeRepository;
@@ -12,14 +12,11 @@ import com.cafeattack.springboot.Repository.MemberRepository;
 import com.cafeattack.springboot.common.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional

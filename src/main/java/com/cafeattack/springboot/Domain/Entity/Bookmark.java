@@ -1,5 +1,6 @@
 package com.cafeattack.springboot.Domain.Entity;
 
+import com.cafeattack.springboot.Domain.Entity.mapping.GroupCafePK;
 import jakarta.persistence.*;
 import lombok.*;
 

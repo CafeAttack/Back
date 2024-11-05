@@ -1,5 +1,6 @@
 package com.cafeattack.springboot.Domain.Entity;
 
+import com.cafeattack.springboot.Domain.Entity.mapping.CafeCategoryPK;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;

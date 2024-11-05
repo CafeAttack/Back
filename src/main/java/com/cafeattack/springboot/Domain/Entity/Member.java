@@ -15,30 +15,33 @@ public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer memberid;
+    private Integer memberId;
 
-    @Column(nullable = false)
-    private String signid;
+    @Column(nullable = false, length = 20)
+    private String signId;
 
-    @Column(name = "name", nullable = false)
+    @Column(nullable = false, length = 30)
     private String name;
 
-    @Column(name = "nickname", nullable = false)
+    @Column(nullable = false, length = 30)
     private String nickname;
 
-    @Column(name = "email", nullable = false)
+    @Column(nullable = false, length = 30)
     private String email;
 
-    @Column(name = "password", nullable = false)
+    @Column(nullable = false, length = 6)
+    private String varifyingNumbers;
+
+    @Column(nullable = false)
     private String password;
 
-    @Column(name = "birth", nullable = false)
+    @Column(nullable = false)
     private Date birth;
 
     @Builder
     public Member(String signId, String name, String nickname,
                   String email, String password, Date birth) {
-        this.signid = signId;
+        this.signId = signId;
         this.name = name;
         this.nickname = nickname;
         this.email = email;
@@ -48,7 +51,7 @@ public class Member {
 
     @Builder
     public Member(AuthRequestDto authRequestDto) {
-        this.signid = authRequestDto.getSignId();
+        this.signId = authRequestDto.getSignId();
         this.name = authRequestDto.getName();
         this.nickname = authRequestDto.getNickname();
         this.email = authRequestDto.getEmail();
@@ -57,11 +60,11 @@ public class Member {
     }
 
     public UsernamePasswordAuthenticationToken getAuthenticationToken() {
-        return new UsernamePasswordAuthenticationToken(signid, password);
+        return new UsernamePasswordAuthenticationToken(signId, password);
     }
 
     public int getMemberid() {
-        return memberid;
+        return memberId;
     }
 
     public void validatePassword(String password) {
