@@ -6,7 +6,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -37,6 +39,9 @@ public class Member {
 
     @Column(nullable = false)
     private Date birth;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
+    private List<Records> recordList = new ArrayList<>();
 
     @Builder
     public Member(String signId, String name, String nickname,
