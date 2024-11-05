@@ -19,9 +19,6 @@ public class Review {
     private Integer reviewId;
 
     @Column(nullable = false)
-    private Integer cafeId;
-
-    @Column(nullable = false)
     private String reviewWriter;
 
     @Column(nullable = false)
@@ -32,6 +29,13 @@ public class Review {
 
     @Column(nullable = false)
     private Integer reviewScore;
+
+    @Column(nullable = false)
+    private int amenities;
+
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "cafe_id")
+    private Cafe cafe;
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<Reviewpics> reviewpicsList = new ArrayList<>();
