@@ -9,8 +9,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 public class Category {
-    @EmbeddedId
-    private CafeCategoryPK relation;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int category;
+
+    @Column(nullable = false, length = 10)
+    private String name;
 
     @ManyToOne
     @MapsId("cafeid")  // CafeCategoryPK의 cafeid와 매핑
