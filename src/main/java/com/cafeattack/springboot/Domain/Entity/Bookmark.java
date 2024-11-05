@@ -4,6 +4,9 @@ import com.cafeattack.springboot.Domain.Entity.mapping.GroupCafePK;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Builder
 @AllArgsConstructor
@@ -22,4 +25,7 @@ public class Bookmark {
 
     @Column(nullable = false, length = 30)
     public String groupName;
+
+    @OneToMany(mappedBy = "bookmark", cascade = CascadeType.ALL)
+    private List<GroupCafePK> groupCafePKList = new ArrayList<>();
 }

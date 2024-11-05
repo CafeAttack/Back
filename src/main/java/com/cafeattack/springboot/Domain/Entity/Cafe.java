@@ -1,5 +1,6 @@
 package com.cafeattack.springboot.Domain.Entity;
 
+import com.cafeattack.springboot.Domain.Entity.mapping.CafeCategoryPK;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,4 +43,7 @@ public class Cafe {
 
     @OneToMany(mappedBy = "cafe", cascade = CascadeType.ALL)
     private List<Records> recordsList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "cafe", cascade = CascadeType.ALL)
+    private List<CafeCategoryPK> cafeCategoryPKList = new ArrayList<>();
 }
