@@ -1,12 +1,28 @@
 package com.cafeattack.springboot.Domain.Entity.mapping;
 
-import jakarta.persistence.Embeddable;
+import com.cafeattack.springboot.Domain.Entity.Bookmark;
+import com.cafeattack.springboot.Domain.Entity.Cafe;
+import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
+
+import java.awt.print.Book;
 import java.io.Serializable;
 
 @Data
-@Embeddable
+@Entity
+@Builder
 public class GroupCafePK implements Serializable {
-    private Integer groupid;
-    private Integer cafeid;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cafe_id")
+    private Cafe cafe;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Bookmark bookmark;
 }

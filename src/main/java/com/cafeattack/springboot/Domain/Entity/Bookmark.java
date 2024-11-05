@@ -12,14 +12,14 @@ import lombok.*;
 @NoArgsConstructor
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"groupid", "cafeid"})})
 public class Bookmark {
-    @EmbeddedId
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column
-    public GroupCafePK relation;
+    private int groupId;
 
     @Column
-    public Integer memberid;
+    public Integer memberId;
 
-    @Column
-    public String groupname;
+    @Column(nullable = false, length = 30)
+    public String groupName;
 }
