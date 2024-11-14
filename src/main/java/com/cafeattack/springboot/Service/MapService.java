@@ -2,6 +2,7 @@ package com.cafeattack.springboot.Service;
 
 import com.cafeattack.springboot.Domain.Entity.Cafe;
 import com.cafeattack.springboot.Exception.BaseException;
+import com.cafeattack.springboot.Repository.CafeCategoryPKRepository;
 import com.cafeattack.springboot.Repository.CafeRepository;
 import com.cafeattack.springboot.Repository.CategoryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,6 +32,7 @@ public class MapService {
     private final DataSource dataSource;
     private final CafeRepository cafeRepository;
     private final CategoryRepository categoryRepository;
+    private final CafeCategoryPKRepository cafeCategoryPKRepository;
 
     @Value("${spring.datasource.url}")
     private String dbUrl;
@@ -453,12 +455,12 @@ public class MapService {
             ArrayNode filteredDocuments = objectMapper.createArrayNode();
 
             // DB에서 카테고리 ID로 필터링된 카페 정보 가져오기
-            List<Cafe> cafes = categoryRepository.findByCategoryId(categoryId);
+            List<Cafe> cafes = cafeCategoryPKRepository.findByCategoryId(categoryId);
 
             for (JsonNode place : documents) {
                 String placeId = place.get("id").asText();
 
-                if (cafes.stream().anyMatch(cafe -> String.valueOf(cafe.getCafeid()).equals(placeId))) {
+                if (cafes.stream().anyMatch(cafe -> String.valueOf(cafe.getCafeId()).equals(placeId))) {
                     ObjectNode filteredPlace = objectMapper.createObjectNode();
                     filteredPlace.put("place_name", place.get("place_name").asText());
                     filteredPlace.put("id", place.get("id").asText());

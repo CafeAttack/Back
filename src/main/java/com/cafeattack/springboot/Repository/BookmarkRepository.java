@@ -9,35 +9,20 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface BookmarkRepository extends JpaRepository<Bookmark, Integer>{
-    @Query("SELECT COUNT(b) FROM Bookmark b WHERE b.memberid = :memberid")
-    long countByMemberId(@Param("memberid") Integer memberid);
+    @Query("SELECT COUNT(b) FROM Bookmark b WHERE b.memberId = :memberId")
+    long countBymemberId(@Param("memberId") Integer memberId);
 
-    @Query("SELECT distinct b.relation.groupid FROM Bookmark b WHERE b.memberid = :memberid")
-    List<Integer> findAllgroupidByMemberId(@Param("memberid") Integer memberid);
-
-    @Query("SELECT b.relation.cafeid FROM Bookmark b WHERE b.memberid = :memberid")
-    List<Integer> findAllcafeByMemberId(@Param("memberid") Integer memberid);
-
-    @Query("SELECT DISTINCT b.groupname FROM Bookmark b WHERE b.relation.groupid = :groupid")
+    @Query("SELECT DISTINCT b.groupName FROM Bookmark b WHERE b.groupId = :groupid")
     String getGroupNameByGroupid(@Param("groupid") Integer groupid);
 
-    @Query("SELECT b.relation.cafeid FROM Bookmark b WHERE b.relation.groupid = :groupid")
-    List<Integer> findAllcafeByGroupid(@Param("groupid") Integer groupid);
+    @Query("SELECT DISTINCT b.memberId FROM Bookmark b WHERE b.groupId = :groupid")
+    Integer getmemberIdByGroupid(@Param("groupid") Integer groupid);
 
-    @Query("SELECT DISTINCT b.memberid FROM Bookmark b WHERE b.relation.groupid = :groupid")
-    Integer getMemberidByGroupid(@Param("groupid") Integer groupid);
-
-    @Query("SELECT Max(b.relation.groupid) FROM Bookmark b")
+    @Query("SELECT Max(b.groupId) FROM Bookmark b")
     Integer getMaxGroupid();
 
-    @Query("SELECT b.relation.groupid FROM Bookmark b WHERE b.relation.cafeid = :cafeid")
-    List<Integer> findAllgroupidByCafeid(@Param("cafeid") Integer cafeid);
-
-    @Query("SELECT COUNT(b) FROM Bookmark b where b.relation.groupid = :groupid")
+    @Query("SELECT COUNT(b) FROM Bookmark b where b.groupId = :groupid")
     long countByGroupid(@Param("groupid") Integer groupid);
-
-    @Query("SELECT b.relation.cafeid From Bookmark b where b.relation.groupid = :groupid")
-    List<Integer> findAllcafeidByGroupid(@Param("groupid") Integer groupid);
 
     @Query("SELECT b from Bookmark b where b.relation = :relation")
     Bookmark findByRelation(@Param("relation") GroupCafePK relation);

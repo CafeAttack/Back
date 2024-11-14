@@ -8,6 +8,7 @@ import com.cafeattack.springboot.Domain.Entity.Member;
 import com.cafeattack.springboot.Domain.Entity.Review;
 import com.cafeattack.springboot.Domain.Entity.Reviewpics;
 import com.cafeattack.springboot.Exception.BaseException;
+import com.cafeattack.springboot.Repository.CafeRepository;
 import com.cafeattack.springboot.Repository.MemberRepository;
 import com.cafeattack.springboot.Repository.ReviewRepository;
 import jakarta.transaction.Transactional;
@@ -28,6 +29,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final MemberRepository memberRepository;
     private final S3Service s3Service;
+    private final CafeRepository cafeRepository;
 
     @Transactional
     public reviewResponseDto writeReviews(int memberid, int cafeid, writeReviewRequestDto WriteReviewRequestDto) {
@@ -44,9 +46,10 @@ public class ReviewService {
         // images 저장 링크 받아오기
         String[] imageUrls = s3Service.uploadPics(WriteReviewRequestDto.getImages());
 
+
         // Dto 정보로 Review 객체 생성
         Review review = Review.builder()
-                .cafeid(cafeid)
+                .cafe(cafeRepository.getCafeByCafeid(cafeid))
                 .reviewwriter(nickname)  // DB에서 조회한 닉네임 설정
                 .reviewdate(currentDate)
                 .reviewtext(WriteReviewRequestDto.getReviewText())
@@ -65,7 +68,7 @@ public class ReviewService {
                 Reviewpics reviewpics = Reviewpics.builder()
                         .review(saveReview)
                         .picurl(imageUrl).build();
-                saveReview.getReviewpics().add(reviewpics);
+                saveReview.getReviewpicsList().add(reviewpics);
 
             }
         }
@@ -73,7 +76,7 @@ public class ReviewService {
         reviewRepository.save(saveReview);
 
         return reviewResponseDto.builder()
-                .reviewId(saveReview.getReviewid())
+                .reviewId(saveReview.getReviewId())
                 .build();
     }
 }

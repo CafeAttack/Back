@@ -41,8 +41,8 @@ public class Review {
     private final List<Reviewpics> reviewpicsList = new ArrayList<>();
 
     @Builder
-    public Review(Integer cafeid, String reviewwriter, LocalDate reviewdate, String reviewtext, Integer reviewscore) {
-        this.cafeId = cafeid;
+    public Review(Cafe cafe, String reviewwriter, LocalDate reviewdate, String reviewtext, Integer reviewscore) {
+        this.cafe = cafe;
         this.reviewWriter = reviewwriter;
         this.reviewDate = reviewdate;
         this.reviewText = reviewtext;

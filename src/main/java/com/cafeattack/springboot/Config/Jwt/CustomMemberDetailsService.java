@@ -27,7 +27,7 @@ public class CustomMemberDetailsService implements UserDetailsService {
     // 해당하는 User의 객체가 존재할 때
     private UserDetails createUserDetails(Member member) {
         return User.builder()
-                .username(member.getSignid())
+                .username(member.getSignId())
                 .password(passwordEncoder.encode(member.getPassword()))
                 .build();
     }

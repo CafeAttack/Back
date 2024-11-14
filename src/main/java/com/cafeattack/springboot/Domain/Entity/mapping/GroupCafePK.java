@@ -5,13 +5,14 @@ import com.cafeattack.springboot.Domain.Entity.Cafe;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.awt.print.Book;
 import java.io.Serializable;
 
 @Data
 @Entity
-@Builder
+@NoArgsConstructor
 public class GroupCafePK implements Serializable {
 
     @Id
