@@ -118,7 +118,7 @@ public class MemberService {
             return ResponseEntity.status(400).body(new BaseResponse(400,"오류가 발생하였습니다"));
 
         int favor_count = 0;
-        favor_count = (int) bookmarkRepository.countByMemberId(member_id);
+        favor_count = (int) bookmarkRepository.countBymemberId(member_id);
 
         menuPageRequestDto MenuPageRequestDto = menuPageRequestDto.builder()
                 .nickname(member.getName())
@@ -134,7 +134,7 @@ public class MemberService {
             return ResponseEntity.status(400).body(new BaseResponse(400, "정보를 불러오는 도중 오류가 발생하였습니다."));
 
         memberPageResponseDto MemberPageResponseDto = memberPageResponseDto.builder()
-                .signid(member.getSignid())
+                .signid(member.getSignId())
                 .name(member.getName())
                 .nickname(member.getNickname())
                 .email(member.getEmail())

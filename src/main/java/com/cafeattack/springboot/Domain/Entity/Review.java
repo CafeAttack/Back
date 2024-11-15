@@ -16,32 +16,36 @@ import java.util.List;
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer reviewid;
+    private Integer reviewId;
 
     @Column(nullable = false)
-    private Integer cafeid;
+    private String reviewWriter;
 
     @Column(nullable = false)
-    private String reviewwriter;
-
-    @Column(nullable = false)
-    private LocalDate reviewdate;
+    private LocalDate reviewDate;
 
     @Column
-    private String reviewtext;
+    private String reviewText;
 
     @Column(nullable = false)
-    private Integer reviewscore;
+    private Integer reviewScore;
+
+    @Column(nullable = false)
+    private int amenities;
+
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "cafe_id")
+    private Cafe cafe;
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<Reviewpics> reviewpics = new ArrayList<>();
+    private final List<Reviewpics> reviewpicsList = new ArrayList<>();
 
     @Builder
-    public Review(Integer cafeid, String reviewwriter, LocalDate reviewdate, String reviewtext, Integer reviewscore) {
-        this.cafeid = cafeid;
-        this.reviewwriter = reviewwriter;
-        this.reviewdate = reviewdate;
-        this.reviewtext = reviewtext;
-        this.reviewscore = reviewscore;
+    public Review(Cafe cafe, String reviewwriter, LocalDate reviewdate, String reviewtext, Integer reviewscore) {
+        this.cafe = cafe;
+        this.reviewWriter = reviewwriter;
+        this.reviewDate = reviewdate;
+        this.reviewText = reviewtext;
+        this.reviewScore = reviewscore;
     }
 }
