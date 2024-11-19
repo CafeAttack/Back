@@ -1,6 +1,8 @@
 package com.cafeattack.springboot.Repository;
 
 import com.cafeattack.springboot.Domain.Entity.Bookmark;
+import com.cafeattack.springboot.Domain.Entity.Cafe;
+import com.cafeattack.springboot.Domain.Entity.Member;
 import com.cafeattack.springboot.Domain.Entity.mapping.GroupCafePK;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,7 +25,4 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Integer>{
 
     @Query("SELECT COUNT(b) FROM Bookmark b where b.groupId = :groupid")
     long countByGroupid(@Param("groupid") Integer groupid);
-
-    @Query("SELECT b from Bookmark b where b.relation = :relation")
-    Bookmark findByRelation(@Param("relation") GroupCafePK relation);
 }
