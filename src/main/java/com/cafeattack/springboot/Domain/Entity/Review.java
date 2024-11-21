@@ -39,10 +39,10 @@ public class Review {
     private Cafe cafe;
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<Reviewpics> reviewpicsList = new ArrayList<>();
+    private List<Reviewpics> reviewpicsList = new ArrayList<>();
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
-    private final List<ReviewTagsPK> reviewTagsPKList = new ArrayList<>();
+    private List<ReviewTagsPK> reviewTagsPKList = new ArrayList<>();
 
     @Builder
     public Review(Cafe cafe, String reviewwriter, LocalDate reviewdate, String reviewtext, Integer reviewscore) {
