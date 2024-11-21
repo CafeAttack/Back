@@ -176,7 +176,7 @@ public class MemberService {
     }
 
     private Member getMemberById(String signId) {
-        return memberRepository.findBySignid(signId).stream()
+        return memberRepository.findBySignId(signId).stream()
                 .findFirst()
                 .orElseThrow(()->new BadRequestException("회원가입되지 않은 이메일"));
     }
