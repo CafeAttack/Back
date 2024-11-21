@@ -3,7 +3,6 @@ package com.cafeattack.springboot.Service;
 import ch.qos.logback.core.util.COWArrayList;
 import com.cafeattack.springboot.Domain.Dto.response.CafeRecordPageResponseDTO;
 import com.cafeattack.springboot.Domain.Dto.response.CafeRecordsDTO;
-import com.cafeattack.springboot.Domain.Dto.response.RecordDateOrderPageResponseDTO;
 import com.cafeattack.springboot.Domain.Dto.response.RecordOrderPageResponseDTO;
 import com.cafeattack.springboot.Domain.Entity.Cafe;
 import com.cafeattack.springboot.Domain.Entity.Member;
