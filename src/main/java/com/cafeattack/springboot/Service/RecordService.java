@@ -1,6 +1,5 @@
 package com.cafeattack.springboot.Service;
 
-import ch.qos.logback.core.util.COWArrayList;
 import com.cafeattack.springboot.Domain.Dto.response.CafeRecordPageResponseDTO;
 import com.cafeattack.springboot.Domain.Dto.response.CafeRecordsDTO;
 import com.cafeattack.springboot.Domain.Dto.response.RecordOrderPageResponseDTO;
@@ -12,7 +11,6 @@ import com.cafeattack.springboot.common.BaseResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.JdbcUpdateAffectedIncorrectNumberOfRowsException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -93,7 +91,7 @@ public class RecordService {
             return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 Cafe가 없습니다."));
 
         int heart = 0;
-        if(groupCafePKRepository.existsByMemberCafe(memberId, cafe) != null) heart = 1;
+        if(groupCafePKRepository.findGroupCafePKByMemberIdandCafe(memberId, cafe) != null) heart = 1;
         CafeRecordPageResponseDTO pageDTO = new CafeRecordPageResponseDTO().builder()
                 .visitcount(recordRepository.getVisitCount(member, cafeId))
                 .heart(heart).build();
