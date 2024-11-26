@@ -1,5 +1,6 @@
 package com.cafeattack.springboot.Domain.Entity;
 
+import com.cafeattack.springboot.Domain.Entity.mapping.ReviewTagsPK;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -38,7 +39,10 @@ public class Review {
     private Cafe cafe;
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<Reviewpics> reviewpicsList = new ArrayList<>();
+    private List<Reviewpics> reviewpicsList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
+    private List<ReviewTagsPK> reviewTagsPKList = new ArrayList<>();
 
     @Builder
     public Review(Cafe cafe, String reviewwriter, LocalDate reviewdate, String reviewtext, Integer reviewscore) {
