@@ -134,7 +134,7 @@ public class MemberService {
             return ResponseEntity.status(400).body(new BaseResponse(400, "정보를 불러오는 도중 오류가 발생하였습니다."));
 
         memberPageResponseDto MemberPageResponseDto = memberPageResponseDto.builder()
-                .signid(member.getSignId())
+                .signId(member.getSignId())
                 .name(member.getName())
                 .nickname(member.getNickname())
                 .email(member.getEmail())
@@ -176,7 +176,7 @@ public class MemberService {
     }
 
     private Member getMemberById(String signId) {
-        return memberRepository.findBySignid(signId).stream()
+        return memberRepository.findBySignId(signId).stream()
                 .findFirst()
                 .orElseThrow(()->new BadRequestException("회원가입되지 않은 이메일"));
     }

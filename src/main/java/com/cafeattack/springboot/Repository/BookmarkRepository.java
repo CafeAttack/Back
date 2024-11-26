@@ -23,7 +23,4 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Integer>{
 
     @Query("SELECT COUNT(b) FROM Bookmark b where b.groupId = :groupid")
     long countByGroupid(@Param("groupid") Integer groupid);
-
-    @Query("SELECT b from Bookmark b where b.relation = :relation")
-    Bookmark findByRelation(@Param("relation") GroupCafePK relation);
 }

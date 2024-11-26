@@ -19,7 +19,7 @@ public class CustomMemberDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String signId) throws UsernameNotFoundException {
-        return memberRepository.findBySignid(signId).stream()
+        return memberRepository.findBySignId(signId).stream()
                 .map(this::createUserDetails).findFirst()
                 .orElseThrow(()->new UsernameNotFoundException("해당하는 유저를 찾을 수 없습니다"));
     }
