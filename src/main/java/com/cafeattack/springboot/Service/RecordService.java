@@ -2,6 +2,7 @@ package com.cafeattack.springboot.Service;
 
 import com.cafeattack.springboot.Domain.Dto.response.CafeRecordPageResponseDTO;
 import com.cafeattack.springboot.Domain.Dto.response.CafeRecordsDTO;
+import com.cafeattack.springboot.Domain.Dto.response.EnrollPageDTO;
 import com.cafeattack.springboot.Domain.Dto.response.RecordOrderPageResponseDTO;
 import com.cafeattack.springboot.Domain.Entity.Cafe;
 import com.cafeattack.springboot.Domain.Entity.Member;
@@ -108,5 +109,25 @@ public class RecordService {
         pageDTO.setRecords(records);
 
         return ResponseEntity.status(200).body(new BaseResponse(200, "카페별 기록 화면입니다.", pageDTO));
+    }
+
+    @Transactional
+    public ResponseEntity getEnrollPage(int memberId, int cafeId) {
+        Member member = memberRepository.findById(memberId).get();
+        if (member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
+
+        Cafe cafe = cafeRepository.getCafeByCafeid(cafeId).get();
+        if(cafe == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 Cafe가 없습니다."));
+
+        int CurrentCount = 0;
+        CurrentCount = recordRepository.getVisitCount(member, cafe.getCafeId());
+
+        EnrollPageDTO enrollPageDTO = EnrollPageDTO.builder()
+                .newCount(CurrentCount + 1)
+                .build();
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "새로 기록할 수 있습니다."));
     }
 }

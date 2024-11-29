@@ -34,4 +34,9 @@ public class RecordController {
     public ResponseEntity getCafePage(@PathVariable("memberId") int memberId, @PathVariable("cafeId") int cafeId) {
         return recordService.getCafePage(memberId, cafeId);
     }
+
+    @GetMapping("/{memberId}/{cafeId}/new")
+    public ResponseEntity getEnrollPage(@PathVariable("memberId") int memberId, @PathVariable("cafeId") int cafeId) {
+        return recordService.getEnrollPage(memberId, cafeId);
+    }
 }
