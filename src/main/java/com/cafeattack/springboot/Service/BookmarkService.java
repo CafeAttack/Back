@@ -111,7 +111,7 @@ public class BookmarkService {
                 if(!isChecked) {
                     GroupCafePK relation = new GroupCafePK();
                     relation.setId(AddBookmarkDto.groups.get(j).getGroupId());
-                    relation.setCafe(cafeRepository.getCafeByCafeid(AddBookmarkDto.getCafeId()));
+                    relation.setCafe(cafeRepository.getCafeByCafeid(AddBookmarkDto.getCafeId()).get());
                     Bookmark bookmark = Bookmark.builder()
                             .memberId(member_id)
                             .groupName(bookmarkRepository.getGroupNameByGroupid(AddBookmarkDto.groups.get(j).getGroupId()))
