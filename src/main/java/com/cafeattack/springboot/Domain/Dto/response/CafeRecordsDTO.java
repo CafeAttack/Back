@@ -7,6 +7,7 @@ import java.util.Date;
 @Data
 @Builder
 public class CafeRecordsDTO {
+    Integer id;
     Date date;
     String text;
 }

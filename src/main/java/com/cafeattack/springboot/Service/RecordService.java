@@ -1,9 +1,7 @@
 package com.cafeattack.springboot.Service;
 
-import com.cafeattack.springboot.Domain.Dto.response.CafeRecordPageResponseDTO;
-import com.cafeattack.springboot.Domain.Dto.response.CafeRecordsDTO;
-import com.cafeattack.springboot.Domain.Dto.response.EnrollPageDTO;
-import com.cafeattack.springboot.Domain.Dto.response.RecordOrderPageResponseDTO;
+import com.cafeattack.springboot.Domain.Dto.request.NewlyRecordRequestDTO;
+import com.cafeattack.springboot.Domain.Dto.response.*;
 import com.cafeattack.springboot.Domain.Entity.Cafe;
 import com.cafeattack.springboot.Domain.Entity.Member;
 import com.cafeattack.springboot.Domain.Entity.Records;
@@ -101,6 +99,7 @@ public class RecordService {
         List<CafeRecordsDTO> records = new ArrayList<>();
         for(int i = 0; i < recordsList.size(); i++) {
             CafeRecordsDTO temp = CafeRecordsDTO.builder()
+                    .id(recordsList.get(i).getRecordId())
                     .date(recordsList.get(i).getRecordDate())
                     .text(recordsList.get(i).getRecordText())
                     .build();
@@ -128,6 +127,71 @@ public class RecordService {
                 .newCount(CurrentCount + 1)
                 .build();
 
-        return ResponseEntity.status(200).body(new BaseResponse(200, "새로 기록할 수 있습니다."));
+        return ResponseEntity.status(200).body(new BaseResponse(200, "새로 기록할 수 있습니다.", enrollPageDTO));
+    }
+
+    @Transactional
+    public ResponseEntity newlyRecord(int memberId, int cafeId, NewlyRecordRequestDTO request) {
+        Member member = memberRepository.findById(memberId).get();
+        if (member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
+
+        Cafe cafe = cafeRepository.getCafeByCafeid(cafeId).get();
+        if(cafe == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 Cafe가 없습니다."));
+
+        Records newRecord = Records.builder()
+                .recordDate(request.getRecorddate())
+                .recordText(request.getRecordtext())
+                .build();
+        recordRepository.save(newRecord);
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "새로 기록하였습니다."));
+    }
+
+    @Transactional
+    public ResponseEntity getEditPage(int memberId, int cafeId, int recordId) {
+        Member member = memberRepository.findById(memberId).get();
+        if (member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
+
+        Cafe cafe = cafeRepository.getCafeByCafeid(cafeId).get();
+        if(cafe == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 Cafe가 없습니다."));
+
+        Records records = recordRepository.findById(recordId).get();
+        if(records == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 Record가 없습니다."));
+
+        int recordCount = recordRepository.getVisitCount(member, cafe.getCafeId());
+
+        EditRecordsResponseDTO responseDTO = EditRecordsResponseDTO.builder()
+                .recordcount(recordCount)
+                .recorddate(records.getRecordDate())
+                .recordtext(records.getRecordText()).build();
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "수정할 수 있습니다.", responseDTO));
+    }
+
+    @Transactional
+    public ResponseEntity editPage(int memberId, int cafeId, int recordId, EditRecordsResponseDTO request) {
+        Member member = memberRepository.findById(memberId).get();
+        if (member == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
+
+        Cafe cafe = cafeRepository.getCafeByCafeid(cafeId).get();
+        if(cafe == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 Cafe가 없습니다."));
+
+        Records records = recordRepository.findById(recordId).get();
+        recordRepository.delete(records);
+        if(records == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 Record가 없습니다."));
+
+        records.setRecordDate(request.getRecorddate());
+        records.setRecordText(request.getRecordtext());
+        recordRepository.save(records);
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "기록이 수정되었습니다."));
     }
 }

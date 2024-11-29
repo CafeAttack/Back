@@ -1,13 +1,13 @@
 package com.cafeattack.springboot.Controller;
 
 import com.amazonaws.Response;
+import com.cafeattack.springboot.Domain.Dto.request.NewlyRecordRequestDTO;
+import com.cafeattack.springboot.Domain.Dto.response.EditRecordsResponseDTO;
 import com.cafeattack.springboot.Service.RecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.parameters.P;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,5 +38,20 @@ public class RecordController {
     @GetMapping("/{memberId}/{cafeId}/new")
     public ResponseEntity getEnrollPage(@PathVariable("memberId") int memberId, @PathVariable("cafeId") int cafeId) {
         return recordService.getEnrollPage(memberId, cafeId);
+    }
+
+    @PostMapping("/{memberId}/{cafeId}/new")
+    public ResponseEntity newlyRecord(@PathVariable("memberId") int memberId, @PathVariable("cafeId") int cafeId, @RequestBody NewlyRecordRequestDTO newlyRecordRequestDTO) {
+        return recordService.newlyRecord(memberId, cafeId, newlyRecordRequestDTO);
+    }
+
+    @GetMapping("/{memberId}/{cafeId}/{recordId}")
+    public ResponseEntity getEditPage(@PathVariable("memberId") int memberId, @PathVariable("cafeId") int cafeId, @PathVariable("recordId") int recordId) {
+        return recordService.getEditPage(memberId, cafeId, recordId);
+    }
+
+    @PatchMapping("/{memberId}/{cafeId}/{recordId}")
+    public ResponseEntity editPage(@PathVariable("memberId") int memberId, @PathVariable("cafeId") int cafeId, @PathVariable("recordId") int recordId, @RequestBody EditRecordsResponseDTO editRecordsResponseDTO) {
+        return recordService.editPage(memberId, cafeId, recordId, editRecordsResponseDTO);
     }
 }
