@@ -12,7 +12,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Builder
 public class memberPageResponseDto {
-    private String signid;
+    private String signId;
     private String name;
     private String nickname;
     private String email;
