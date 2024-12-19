@@ -8,5 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class authVerificationEmailRequestDto {
-    private String code;
+    private String email;
+    private Integer code;
 }
