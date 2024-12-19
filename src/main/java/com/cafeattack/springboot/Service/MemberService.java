@@ -31,9 +31,6 @@ public class MemberService {
     private final EmailService emailService;
     private final EmailVerificationRepository emailVerificationRepository;
 
-    // email 인증 코드
-    private String emailCode;
-
     // jwt 토큰 관련
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -50,7 +47,7 @@ public class MemberService {
     @Transactional
     public void verifyEmailCode (String email, Integer code) {
         EmailVerification emailVerification = emailVerificationRepository.findLatestByEmailNative(email)
-                .orElseThrow(()-> new BaseException(400, "이메일 인증이 필요합니다."));
+                .orElseThrow(()-> new BaseException(400, "이메일 중복 인증이 필요합니다."));
 
         if (emailVerification.getExpirationTime().isBefore(LocalDateTime.now())) {
             throw new BaseException(400, "인증번호가 만료되었습니다.");
@@ -75,19 +72,14 @@ public class MemberService {
 
     @Transactional
     public void validateEmailRequest(String email) {
-        System.out.println("1. validateEmailRequest 시작");
         validateDuplicateEmail(email);
+        requestEmailVerification(email);
     }
 
-    private boolean isEmailVerified(String code) {
-        return emailCode.equals(code);
-    }
     private void validateDuplicateEmail(String email) {
-        System.out.println("2. validateDuplicateEmail 시작");
         if (!memberRepository.findByEmail(email).stream().toList().isEmpty()) {  // 수정해야하나...?
-            throw new BadRequestException("이미 회원가입된 이메일");
+            throw new BaseException(400, "이미 회원가입된 이메일");
         }
-        requestEmailVerification(email);
     }
 
     @Transactional
