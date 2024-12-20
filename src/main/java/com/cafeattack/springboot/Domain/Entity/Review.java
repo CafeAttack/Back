@@ -31,8 +31,9 @@ public class Review {
     @Column(nullable = false)
     private Integer reviewScore;
 
-    @Column(nullable = false)
-    private int amenities;
+    @ElementCollection
+    @CollectionTable(name = "review_amenities", joinColumns = @JoinColumn(name = "review_id"))
+    private List<Boolean> amenities = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "cafe_id")
@@ -45,11 +46,12 @@ public class Review {
     private List<ReviewTagsPK> reviewTagsPKList = new ArrayList<>();
 
     @Builder
-    public Review(Cafe cafe, String reviewwriter, LocalDate reviewdate, String reviewtext, Integer reviewscore) {
+    public Review(Cafe cafe, String reviewWriter, LocalDate reviewDate, String reviewText, Integer reviewScore, List<Boolean> amenities) {
         this.cafe = cafe;
-        this.reviewWriter = reviewwriter;
-        this.reviewDate = reviewdate;
-        this.reviewText = reviewtext;
-        this.reviewScore = reviewscore;
+        this.reviewWriter = reviewWriter;
+        this.reviewDate = reviewDate;
+        this.reviewText = reviewText;
+        this.reviewScore = reviewScore;
+        this.amenities = amenities;
     }
 }
