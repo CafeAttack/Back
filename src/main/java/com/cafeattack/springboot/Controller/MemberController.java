@@ -36,7 +36,7 @@ public class MemberController {
     // 이메일 인증
     @PostMapping("/auth/email-verification")
     public BaseResponse verificationEmail(@RequestBody authVerificationEmailRequestDto AuthVerificationEmailRequestDto) {
-        memberService.verifyEmailCode(AuthVerificationEmailRequestDto.getCode());
+        memberService.verifyEmailCode(AuthVerificationEmailRequestDto.getEmail(), AuthVerificationEmailRequestDto.getCode());
         return new BaseResponse(HttpStatus.OK.value(), "사용자 이메일 인증 성공");
     }
 

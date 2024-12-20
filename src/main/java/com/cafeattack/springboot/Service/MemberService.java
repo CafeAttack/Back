@@ -6,10 +6,7 @@ import com.cafeattack.springboot.Domain.Dto.response.*;
 import com.cafeattack.springboot.Domain.Entity.*;
 import com.cafeattack.springboot.Exception.BadRequestException;
 import com.cafeattack.springboot.Exception.BaseException;
-import com.cafeattack.springboot.Repository.BookmarkRepository;
-import com.cafeattack.springboot.Repository.CafeRepository;
-import com.cafeattack.springboot.Repository.CategoryRepository;
-import com.cafeattack.springboot.Repository.MemberRepository;
+import com.cafeattack.springboot.Repository.*;
 import com.cafeattack.springboot.common.BaseErrorResponse;
 import com.cafeattack.springboot.common.BaseResponse;
 import com.cafeattack.springboot.common.RandomKey;
@@ -21,6 +18,8 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -30,9 +29,7 @@ public class MemberService {
     private final CafeRepository cafeRepository;
     private final CategoryRepository categoryRepository;
     private final EmailService emailService;
-
-    // email 인증 코드
-    private String emailCode;
+    private final EmailVerificationRepository emailVerificationRepository;
 
     // jwt 토큰 관련
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
@@ -48,9 +45,20 @@ public class MemberService {
 
     // 이메일 인증
     @Transactional
-    public void verifyEmailCode (String code) {
-        if (isEmailVerified(code)) return;
-        throw new BadRequestException("인증번호가 일치하지 않습니다.");
+    public void verifyEmailCode (String email, Integer code) {
+        EmailVerification emailVerification = emailVerificationRepository.findLatestByEmailNative(email)
+                .orElseThrow(()-> new BaseException(400, "이메일 중복 인증이 필요합니다."));
+
+        if (emailVerification.getExpirationTime().isBefore(LocalDateTime.now())) {
+            throw new BaseException(400, "인증번호가 만료되었습니다.");
+        }
+
+        if (emailVerification.getVerificationCode() == null ||
+            !emailVerification.getVerificationCode().equals(code)) {
+            throw new BaseException(400, "인증번호가 일치하지 않습니다.");
+        }
+        emailVerificationRepository.delete(emailVerification);
+        emailVerificationRepository.flush();
     }
 
     // 로그인
@@ -64,30 +72,23 @@ public class MemberService {
 
     @Transactional
     public void validateEmailRequest(String email) {
-        System.out.println("1. validateEmailRequest 시작");
         validateDuplicateEmail(email);
-        createVerificationCode();
-        System.out.println("3. createVerificationCode 완료");
-        emailService.sendValidateEmailRequestMessage(email, getVerificationCode());
-    }
-
-    private boolean isEmailVerified(String code) {
-        return emailCode.equals(code);
-    }
-
-    private void createVerificationCode() {
-        emailCode = RandomKey.createKey();
-    }
-
-    private String getVerificationCode() {
-        return emailCode;
+        requestEmailVerification(email);
     }
 
     private void validateDuplicateEmail(String email) {
-        System.out.println("2. validateDuplicateEmail 시작");
         if (!memberRepository.findByEmail(email).stream().toList().isEmpty()) {  // 수정해야하나...?
-            throw new BadRequestException("이미 회원가입된 이메일");
+            throw new BaseException(400, "이미 회원가입된 이메일");
         }
+    }
+
+    @Transactional
+    public void requestEmailVerification(String email) {
+        Integer verificationCode = Integer.valueOf(RandomKey.createKey());
+        LocalDateTime expirationDate = LocalDateTime.now().plusMinutes(10);
+        EmailVerification emailVerification = new EmailVerification(email, verificationCode, expirationDate);
+        emailVerificationRepository.save(emailVerification);
+        emailService.sendValidateEmailRequestMessage(email, verificationCode.toString());
     }
 
     private void validateAuthReqeust(AuthRequestDto authRequestDto) {
@@ -134,7 +135,7 @@ public class MemberService {
             return ResponseEntity.status(400).body(new BaseResponse(400, "정보를 불러오는 도중 오류가 발생하였습니다."));
 
         memberPageResponseDto MemberPageResponseDto = memberPageResponseDto.builder()
-                .signid(member.getSignId())
+                .signId(member.getSignId())
                 .name(member.getName())
                 .nickname(member.getNickname())
                 .email(member.getEmail())
