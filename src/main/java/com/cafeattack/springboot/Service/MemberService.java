@@ -122,7 +122,7 @@ public class MemberService {
         favor_count = (int) bookmarkRepository.countBymemberId(member_id);
 
         menuPageRequestDto MenuPageRequestDto = menuPageRequestDto.builder()
-                .nickname(member.getName())
+                .nickname(member.getNickname())
                 .favor_count(favor_count).build();
 
         return ResponseEntity.status(200).body(new BaseResponse(200, "메뉴가 열렸습니다.", MenuPageRequestDto));
