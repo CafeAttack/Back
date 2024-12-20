@@ -31,7 +31,7 @@ public class Member {
     @Column(nullable = false, length = 30)
     private String email;
 
-    @Column(nullable = false, length = 6)
+    @Column(length = 6)
     private String varifyingNumbers;
 
     @Column(nullable = false)

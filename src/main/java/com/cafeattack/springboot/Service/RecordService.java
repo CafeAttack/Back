@@ -38,30 +38,6 @@ public class RecordService {
         return ResponseEntity.status(200).body(new BaseResponse(200, "기록장이 열렸습니다.", cafes));
     }
 
-    @Transactional
-    public ResponseEntity getNameorderPage(int memberId) {
-        Member member = memberRepository.findById(memberId).get();
-        if(member == null)
-            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
-
-        List<RecordOrderPageResponseDTO> cafes = getPageDTO(member);
-        cafes.sort((dto1, dto2) -> dto2.getCafename().compareTo(dto1.getCafename()));
-
-        return ResponseEntity.status(200).body(new BaseResponse(200, "기록장이 열렸습니다.", cafes));
-    }
-
-    @Transactional
-    public ResponseEntity getFreqorderPage(int memberId) {
-        Member member = memberRepository.findById(memberId).get();
-        if(member == null)
-            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
-
-        List<RecordOrderPageResponseDTO> cafes = getPageDTO(member);
-        cafes.sort((dto1, dto2) -> dto2.getVisitcount().compareTo(dto1.getVisitcount()));
-
-        return ResponseEntity.status(200).body(new BaseResponse(200, "기록장이 열렸습니다.", cafes));
-    }
-
     private List<RecordOrderPageResponseDTO> getPageDTO(Member member) {
         List<Cafe> cafeList = recordRepository.findAllCafeByMember(member);
         List<RecordOrderPageResponseDTO> cafes = new ArrayList<>();
@@ -144,9 +120,12 @@ public class RecordService {
                 .recordDate(request.getRecorddate())
                 .recordText(request.getRecordtext())
                 .build();
-        recordRepository.save(newRecord);
+        newRecord = recordRepository.save(newRecord);
 
-        return ResponseEntity.status(200).body(new BaseResponse(200, "새로 기록하였습니다."));
+        NewlyRecordResponseDTO data = NewlyRecordResponseDTO.builder()
+                .recordId(newRecord.getRecordId()).build();
+
+        return ResponseEntity.status(200).body(new BaseResponse(200, "새로 기록하였습니다.", data));
     }
 
     @Transactional

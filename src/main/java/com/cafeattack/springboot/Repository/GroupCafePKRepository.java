@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface GroupCafePKRepository extends JpaRepository<GroupCafePK,Integer> {
-    @Query("SELECT distinct b.groupId FROM GroupCafePK g join Bookmark b on g.bookmark.groupId = b.groupId WHERE b.memberId =: memberId")
+    @Query("SELECT distinct b.groupId FROM GroupCafePK g join Bookmark b on g.bookmark.groupId = b.groupId WHERE b.memberId = :memberId")
     List<Integer> findAllgroupIdBymemberId(@Param("memberId") Integer memberId);
 
     @Query("SELECT g.cafe.cafeId FROM GroupCafePK g join Bookmark b on g.bookmark.groupId = b.groupId WHERE b.memberId = :memberId")

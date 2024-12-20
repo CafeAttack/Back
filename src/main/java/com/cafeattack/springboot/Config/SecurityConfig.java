@@ -61,7 +61,8 @@ public class SecurityConfig {
                                 .requestMatchers("/member/{memberid}/signout").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/map/**").permitAll()
                                 .requestMatchers("/review/**").permitAll()
-                                .requestMatchers("/member/**").authenticated()
+                                .requestMatchers("/member/**").permitAll()
+                                .requestMatchers("/record/**").permitAll()
                                 .anyRequest().authenticated()
                 );
 
