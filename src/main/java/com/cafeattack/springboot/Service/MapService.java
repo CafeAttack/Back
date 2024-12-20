@@ -1,5 +1,7 @@
 package com.cafeattack.springboot.Service;
 
+import com.cafeattack.springboot.Domain.Dto.response.CafeCategoryLocationDto;
+import com.cafeattack.springboot.Domain.Dto.response.CafeLocationDto;
 import com.cafeattack.springboot.Domain.Entity.Cafe;
 import com.cafeattack.springboot.Exception.BaseException;
 import com.cafeattack.springboot.Repository.CafeCategoryPKRepository;
@@ -17,12 +19,15 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.io.*;
+import java.math.BigDecimal;
 import java.net.*;
 import java.sql.*;
-import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,121 +50,29 @@ public class MapService {
 
 
     // 카테고리 관계 없이 모든 카페 지도에서 보기
-    public String getAllCafesFromMap(String longitude, String latitude, int radius) {
-        String apiUrl = "https://dapi.kakao.com/v2/local/search/category.json";
-        String jsonString  = null;
+    public List<CafeLocationDto> getAllCafesFromMap(Double longitude, Double latitude) {
+        List<Object[]> results = cafeRepository.findCafesWithinRadius(latitude, longitude);
 
-        try {
-            // URL 구성
-            String addr = apiUrl + "?category_group_code=CE7" + "&x=" + longitude + "&y=" + latitude + "&radius="
-                    + radius + "&sort=distance";
-            URL url = new URL(addr);
-            URLConnection connection = url.openConnection();
-            connection.setRequestProperty("Authorization", "KakaoAK " + apiKey);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            StringBuffer docJson = new StringBuffer();
-            String line;
-            while((line=reader.readLine()) != null) {
-                docJson.append(line);
-            }
-            jsonString = docJson.toString();
-            reader.close();
-
-            // JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(jsonString);
-            ArrayNode documents = (ArrayNode)jsonNode.get("documents");
-
-            ArrayNode filteredDocuments = objectMapper.createArrayNode();
-
-            for (JsonNode place : documents) {
-                String categoryName = place.get("category_name").asText();
-
-                ObjectNode filteredPlace = objectMapper.createObjectNode();
-                filteredPlace.put("id", place.get("id").asText());
-                filteredPlace.put("x", place.get("x").asText());
-                filteredPlace.put("y", place.get("y").asText());
-                // 제외해야할 정보 있으면 더 제외하기
-                filteredDocuments.add(filteredPlace);
-            }
-
-            // 필터링된 결과 JSON 변환
-            ((ObjectNode) jsonNode).set("documents", filteredDocuments);
-            jsonString = objectMapper.writeValueAsString(jsonNode);
-
-        } catch (MalformedURLException e) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (IOException e) {
-            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
-        }
-        return jsonString;
+        return results.stream()
+                .map(row -> new CafeLocationDto(
+                        (Integer) row[0],
+                        ((BigDecimal) row[1]).doubleValue(),    // latitude
+                        ((BigDecimal) row[2]).doubleValue()    // longitude
+                ))
+                .collect(Collectors.toList());
     }
 
+    public List<CafeCategoryLocationDto> getCafeFromMap(int categoryId, double longitude, double latitude) {
+        List<Object[]> results = cafeRepository.findCafesByCategoryAndRadius(categoryId, longitude, latitude);
 
-    public String getCafeFromMap(int categoryId, String longitude, String latitude, int radius) {
-        String apiUrl = "https://dapi.kakao.com/v2/local/search/category.json";
-        String jsonString  = null;
-
-        try {
-            // URL 구성
-            String addr = apiUrl + "?category_group_code=CE7" + "&x=" + longitude + "&y=" + latitude + "&radius="
-                    + radius + "&sort=distance";
-            URL url = new URL(addr);
-            URLConnection connection = url.openConnection();
-            connection.setRequestProperty("Authorization", "KakaoAK " + apiKey);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            StringBuffer docJson = new StringBuffer();
-            String line;
-            while((line=reader.readLine()) != null) {
-                docJson.append(line);
-            }
-            jsonString = docJson.toString();
-            reader.close();
-
-            // JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(jsonString);
-            ArrayNode documents = (ArrayNode)jsonNode.get("documents");
-
-            Set<String> cafeIds = new HashSet<>();
-            try (Connection dbConnection = dataSource.getConnection()) {
-                String dbQuery = "SELECT c.cafeid FROM cafe c JOIN category cat ON c.cafeid = cat.cafeid WHERE cat.category = ?";
-                try (PreparedStatement pstmt = dbConnection.prepareStatement(dbQuery)) {
-                    pstmt.setInt(1, categoryId);  // categoryId를 SQL 쿼리에 안전하게 바인딩
-                    try (ResultSet rs = pstmt.executeQuery()) {
-                        while (rs.next()) {
-                            cafeIds.add(rs.getString("cafeId"));  // 조회된 cafeId를 HashSet에 추가
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
-            }
-
-            ArrayNode filteredDocuments = objectMapper.createArrayNode();
-            for (JsonNode place : documents) {
-                String placeId = place.get("id").asText();
-
-                if (cafeIds.contains(placeId)) {
-                    ObjectNode filteredPlace = objectMapper.createObjectNode();
-                    filteredPlace.put("id", place.get("id").asText());
-                    filteredPlace.put("x", place.get("x").asText());
-                    filteredPlace.put("y", place.get("y").asText());
-                    // 제외해야할 정보 있으면 더 제외하기
-                    filteredDocuments.add(filteredPlace);
-                }
-            }
-
-            // 필터링된 결과 JSON 변환
-            ((ObjectNode) jsonNode).set("documents", filteredDocuments);
-            jsonString = objectMapper.writeValueAsString(jsonNode);
-
-        } catch (MalformedURLException e) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (IOException e) {
-            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
-        }
-        return jsonString;
+        return results.stream()
+                .map(row ->
+                    new CafeCategoryLocationDto(
+                        (Integer) row[0],
+                        ((BigDecimal) row[1]).doubleValue(),
+                        ((BigDecimal) row[2]).doubleValue())
+                )
+                .collect(Collectors.toList());
     }
 
 
