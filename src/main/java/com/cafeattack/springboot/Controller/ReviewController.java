@@ -24,6 +24,18 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final ReviewRepository reviewRepository;
 
+    @GetMapping("/{memberId}/{cafeId}")
+    public ResponseEntity GetReview(@PathVariable int memberId, @PathVariable int cafeId) {
+        try {
+            GetReviewWriteResponseDTO data = reviewService.getReviewWriting(memberId, cafeId);
+
+            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(HttpStatus.OK.value(), "리뷰 작성이 완료되었습니다.", data));
+
+        } catch (BaseException e) {
+            return ResponseEntity.status(e.getCode()).body(new BaseErrorResponse(e.getCode(), e.getMessage()));
+        }
+    }
+
     @PostMapping(value = "/{memberid}/{cafeid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> writeReview(@PathVariable("memberid") int memberid,
                                          @PathVariable("cafeid") int cafeid,
