@@ -5,16 +5,12 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.cafeattack.springboot.Domain.Dto.request.writeReviewRequestDto;
 import com.cafeattack.springboot.Domain.Dto.response.GetReviewWriteResponseDTO;
 import com.cafeattack.springboot.Domain.Dto.response.reviewResponseDto;
-import com.cafeattack.springboot.Domain.Entity.Cafe;
-import com.cafeattack.springboot.Domain.Entity.Member;
-import com.cafeattack.springboot.Domain.Entity.Review;
-import com.cafeattack.springboot.Domain.Entity.Reviewpics;
+import com.cafeattack.springboot.Domain.Entity.*;
+import com.cafeattack.springboot.Domain.Entity.mapping.ReviewTagsPK;
 import com.cafeattack.springboot.Exception.BaseException;
-import com.cafeattack.springboot.Repository.BookmarkRepository;
-import com.cafeattack.springboot.Repository.CafeRepository;
-import com.cafeattack.springboot.Repository.MemberRepository;
-import com.cafeattack.springboot.Repository.ReviewRepository;
+import com.cafeattack.springboot.Repository.*;
 import jakarta.transaction.Transactional;
+import lombok.Locked;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +31,7 @@ public class ReviewService {
     private final S3Service s3Service;
     private final CafeRepository cafeRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final TagRepository tagRepository;
 
     @Transactional
     public GetReviewWriteResponseDTO getReviewWriting(int memberId, int cafeId) {
@@ -75,10 +72,11 @@ public class ReviewService {
         // Dto 정보로 Review 객체 생성
         Review review = Review.builder()
                 .cafe(cafeRepository.getCafeByCafeid(cafeid).get())
-                .reviewwriter(nickname)  // DB에서 조회한 닉네임 설정
-                .reviewdate(currentDate)
-                .reviewtext(WriteReviewRequestDto.getReviewText())
-                .reviewscore(WriteReviewRequestDto.getReviewScore())
+                .reviewWriter(nickname)  // DB에서 조회한 닉네임 설정
+                .reviewDate(currentDate)
+                .reviewText(WriteReviewRequestDto.getReviewText())
+                .reviewScore(WriteReviewRequestDto.getReviewScore())
+                .amenities(WriteReviewRequestDto.getAmenities())
                 .build();
 
         // Review 객체 DB에 저장, 반환된 객체 가져옴
@@ -95,6 +93,20 @@ public class ReviewService {
                         .picurl(imageUrl).build();
                 saveReview.getReviewpicsList().add(reviewpics);
 
+            }
+        }
+
+        if (WriteReviewRequestDto.getTags() != null) {
+            for (String tagName : WriteReviewRequestDto.getTags()) {
+                Tag tag = tagRepository.findByTagName(tagName)
+                        .orElseGet(()->tagRepository.save(Tag.builder().tagName(tagName).build()));
+
+                ReviewTagsPK reviewTag = ReviewTagsPK.builder()
+                        .review(saveReview)
+                        .tag(tag)
+                        .build();
+
+                saveReview.getReviewTagsPKList().add(reviewTag);
             }
         }
         // DB에 저장
