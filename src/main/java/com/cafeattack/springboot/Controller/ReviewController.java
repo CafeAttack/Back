@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/review")
 @RequiredArgsConstructor
@@ -40,15 +42,19 @@ public class ReviewController {
     public ResponseEntity<?> writeReview(@PathVariable("memberid") int memberid,
                                          @PathVariable("cafeid") int cafeid,
                                          @RequestParam("reviewText") String reviewText,
-                                         @RequestParam("reviewScore") Integer reviewScore,
-                                         @RequestParam(value = "images", required = false)MultipartFile[] images) {
+                                         @RequestParam("reviewScore") int reviewScore,
+                                         @RequestParam(value = "tags", required = false) List<String> tags,
+                                         @RequestParam(value = "amenities", required = false) List<Boolean> amenities,
+                                         @RequestPart(value = "images", required = false)MultipartFile[] images) {
         try {
-            writeReviewRequestDto WriteReviewRequestDto = writeReviewRequestDto.builder()
-                    .reviewText(reviewText)
-                    .reviewScore(reviewScore)
-                    .images(images).build();
+            writeReviewRequestDto requestDto = new writeReviewRequestDto();
+            requestDto.setReviewText(reviewText);
+            requestDto.setReviewScore(reviewScore);
+            requestDto.setTags(tags);
+            requestDto.setAmenities(amenities);
+            requestDto.setImages(images);
 
-            reviewResponseDto ReviewResponseDto = reviewService.writeReviews(memberid, cafeid, WriteReviewRequestDto);
+            reviewResponseDto ReviewResponseDto = reviewService.writeReviews(memberid, cafeid, requestDto);
 
             return ResponseEntity
                     .status(HttpStatus.OK)
