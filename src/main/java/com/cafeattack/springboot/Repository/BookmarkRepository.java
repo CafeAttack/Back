@@ -18,7 +18,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Integer>{
     Integer getmemberIdByGroupid(@Param("groupid") Integer groupid);
 
     @Query("SELECT Max(b.groupId) FROM Bookmark b")
-    Integer getMaxGroupid();
+    Optional<Integer> getMaxGroupid();
 
     @Query("SELECT COUNT(b) FROM Bookmark b where b.groupId = :groupid")
     long countByGroupid(@Param("groupid") Integer groupid);

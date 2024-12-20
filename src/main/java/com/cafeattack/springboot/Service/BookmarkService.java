@@ -3,6 +3,7 @@ package com.cafeattack.springboot.Service;
 import com.cafeattack.springboot.Domain.Dto.request.*;
 import com.cafeattack.springboot.Domain.Dto.response.*;
 import com.cafeattack.springboot.Domain.Entity.Bookmark;
+import com.cafeattack.springboot.Domain.Entity.Cafe;
 import com.cafeattack.springboot.Domain.Entity.mapping.CafeCategoryPK;
 import com.cafeattack.springboot.Domain.Entity.mapping.GroupCafePK;
 import com.cafeattack.springboot.Domain.Entity.Member;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -100,37 +102,26 @@ public class BookmarkService {
         if(member == null)
             return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
 
+        Cafe cafe = cafeRepository.getCafeByCafeid(AddBookmarkDto.getCafeId()).get();
+        if(cafe == null)
+            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 Cafe가 없습니다."));
+
         for(int j = 0; j < AddBookmarkDto.groups.size(); j++) {
-            boolean isChecked = false;
             if(AddBookmarkDto.groups.get(j).isChecked()) {
-                for(int k = 0; k < bookmarkRepository.countByGroupid(AddBookmarkDto.groups.get(j).getGroupId()); k++) {
-                    if(AddBookmarkDto.getCafeId() == groupCafePKRepository.findAllcafeidByGroupid(AddBookmarkDto.groups.get(j).getGroupId()).get(k)) {
-                        isChecked = true;
-                    }
+                GroupCafePK groupCafePK = new GroupCafePK();
+                groupCafePK.setCafe(cafe);
+                Optional<Bookmark> targetBookmark = bookmarkRepository.findById(AddBookmarkDto.groups.get(j).getGroupId());
+                if(targetBookmark.isPresent()) {
+                    Bookmark bookmark = targetBookmark.get();
+                    groupCafePK.setBookmark(bookmark);
                 }
-                if(!isChecked) {
-                    GroupCafePK relation = new GroupCafePK();
-                    relation.setId(AddBookmarkDto.groups.get(j).getGroupId());
-                    relation.setCafe(cafeRepository.getCafeByCafeid(AddBookmarkDto.getCafeId()).get());
-                    Bookmark bookmark = Bookmark.builder()
-                            .memberId(member_id)
-                            .groupName(bookmarkRepository.getGroupNameByGroupid(AddBookmarkDto.groups.get(j).getGroupId()))
-                            .build();
-                    bookmarkRepository.save(bookmark);
+                else {
+                    return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 group이 없습니다."));
                 }
+                groupCafePKRepository.save(groupCafePK);
             }
             else {
-                isChecked = true;
-                for(int k = 0; k < bookmarkRepository.countByGroupid(AddBookmarkDto.groups.get(j).getGroupId()); k++) {
-                    if(AddBookmarkDto.getCafeId() == groupCafePKRepository.findAllcafeidByGroupid(AddBookmarkDto.groups.get(j).getGroupId()).get(k)) {
-                        isChecked = false;
-                    }
-                }
-                if(!isChecked) {
-                    GroupCafePK groupCafePK = groupCafePKRepository.findByRelation(AddBookmarkDto.groups.get(j).getGroupId(), AddBookmarkDto.getCafeId());
-
-                    groupCafePKRepository.delete(groupCafePK);
-                }
+                continue;
             }
         }
 
@@ -143,7 +134,15 @@ public class BookmarkService {
         if(member == null)
             return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
 
-        Integer newGroupId = bookmarkRepository.getMaxGroupid() + 1;
+        Integer newGroupId = 0;
+        Optional<Integer> number = bookmarkRepository.getMaxGroupid();
+        if(number.isPresent()) {
+            newGroupId = number.get() + 1;
+        }
+        else {
+            newGroupId = 0;
+        }
+
         Bookmark bookmark = Bookmark.builder()
                 .groupId(newGroupId)
                 .groupName(AddGroupDto.getGroupName())
