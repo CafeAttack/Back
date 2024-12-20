@@ -49,7 +49,7 @@ public class ReviewService {
 
         // Dto 정보로 Review 객체 생성
         Review review = Review.builder()
-                .cafe(cafeRepository.getCafeByCafeid(cafeid))
+                .cafe(cafeRepository.getCafeByCafeid(cafeid).get())
                 .reviewwriter(nickname)  // DB에서 조회한 닉네임 설정
                 .reviewdate(currentDate)
                 .reviewtext(WriteReviewRequestDto.getReviewText())
