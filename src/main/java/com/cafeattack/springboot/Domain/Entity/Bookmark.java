@@ -23,7 +23,7 @@ public class Bookmark {
     @Column
     public Integer memberId;
 
-    @Column(nullable = false, length = 30)
+    @Column(length = 30)
     public String groupName;
 
     @OneToMany(mappedBy = "bookmark", cascade = CascadeType.ALL)

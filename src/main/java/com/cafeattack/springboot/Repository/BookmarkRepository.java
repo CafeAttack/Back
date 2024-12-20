@@ -23,6 +23,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Integer>{
     @Query("SELECT COUNT(b) FROM Bookmark b where b.groupId = :groupid")
     long countByGroupid(@Param("groupid") Integer groupid);
 
-    @Query("SELECT b.groupId FROM Bookmark b join GroupCafePK g on b = g.bookmark WHERE b.memberId = :memberId and g.cafe.cafeId = cafeId")
+    @Query("SELECT b.groupId FROM Bookmark b join GroupCafePK g on b = g.bookmark WHERE b.memberId = :memberId and g.cafe.cafeId = :cafeId")
     Optional<Integer> isFavorite(@Param("memberId") Integer memberId, @Param("cafeId") Integer cafeId);
 }
