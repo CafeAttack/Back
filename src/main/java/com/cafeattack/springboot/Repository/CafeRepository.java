@@ -14,5 +14,5 @@ public interface CafeRepository extends JpaRepository<Cafe, Integer> {
     String getCafeNameByCafeid(@Param("cafeid") Integer cafeid);
 
     @Query("SELECT c FROM Cafe c WHERE c.cafeId = :cafeid")
-    Cafe getCafeByCafeid(@Param("cafeid") Integer cafeid);
+    Optional<Cafe> getCafeByCafeid(@Param("cafeid") Integer cafeid);
 }

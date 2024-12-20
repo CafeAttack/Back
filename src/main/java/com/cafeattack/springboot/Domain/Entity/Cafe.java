@@ -17,7 +17,7 @@ public class Cafe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer cafeId;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String cafeName;
 
     @Column(nullable = false)
@@ -26,13 +26,13 @@ public class Cafe {
     @Column(nullable = false)
     private BigDecimal longitude;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String address;
 
-    @Column(nullable = false)
+    @Column
     private String time;
 
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private String phone;
 
     @Column

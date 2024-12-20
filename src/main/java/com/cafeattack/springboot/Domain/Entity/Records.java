@@ -1,25 +1,19 @@
 package com.cafeattack.springboot.Domain.Entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
 @Entity
 @Builder
-@Getter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Records {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int recordId;
-
-    @Column(nullable = false, length = 50)
-    private String recordName;
 
     @Column(nullable = false)
     private String recordText;

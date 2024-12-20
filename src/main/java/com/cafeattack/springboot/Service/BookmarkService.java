@@ -33,7 +33,6 @@ public class BookmarkService {
             return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
 
         List<bookmarkPageGroupResponseDto> groups = new ArrayList<bookmarkPageGroupResponseDto>();
-
         List<Integer> allgroupId = groupCafePKRepository.findAllgroupIdBymemberId(member_id);
         for(int i = 0; i < allgroupId.size(); i++) {
             String groupName = bookmarkRepository.getGroupNameByGroupid(allgroupId.get(i));
@@ -112,7 +111,7 @@ public class BookmarkService {
                 if(!isChecked) {
                     GroupCafePK relation = new GroupCafePK();
                     relation.setId(AddBookmarkDto.groups.get(j).getGroupId());
-                    relation.setCafe(cafeRepository.getCafeByCafeid(AddBookmarkDto.getCafeId()));
+                    relation.setCafe(cafeRepository.getCafeByCafeid(AddBookmarkDto.getCafeId()).get());
                     Bookmark bookmark = Bookmark.builder()
                             .memberId(member_id)
                             .groupName(bookmarkRepository.getGroupNameByGroupid(AddBookmarkDto.groups.get(j).getGroupId()))

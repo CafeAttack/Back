@@ -3,11 +3,14 @@ package com.cafeattack.springboot.Service;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.cafeattack.springboot.Domain.Dto.request.writeReviewRequestDto;
+import com.cafeattack.springboot.Domain.Dto.response.GetReviewWriteResponseDTO;
 import com.cafeattack.springboot.Domain.Dto.response.reviewResponseDto;
+import com.cafeattack.springboot.Domain.Entity.Cafe;
 import com.cafeattack.springboot.Domain.Entity.Member;
 import com.cafeattack.springboot.Domain.Entity.Review;
 import com.cafeattack.springboot.Domain.Entity.Reviewpics;
 import com.cafeattack.springboot.Exception.BaseException;
+import com.cafeattack.springboot.Repository.BookmarkRepository;
 import com.cafeattack.springboot.Repository.CafeRepository;
 import com.cafeattack.springboot.Repository.MemberRepository;
 import com.cafeattack.springboot.Repository.ReviewRepository;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +34,27 @@ public class ReviewService {
     private final MemberRepository memberRepository;
     private final S3Service s3Service;
     private final CafeRepository cafeRepository;
+    private final BookmarkRepository bookmarkRepository;
+
+    @Transactional
+    public GetReviewWriteResponseDTO getReviewWriting(int memberId, int cafeId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "Member not found"));
+
+        Cafe cafe = cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "Cafe not found"));
+
+        boolean isFavor = false;
+        Optional<Integer> isExist = bookmarkRepository.isFavorite(memberId, cafeId);
+        if(isExist.isPresent()) {
+            isFavor = true;
+        }
+
+        return GetReviewWriteResponseDTO.builder()
+                .cafename(cafe.getCafeName())
+                .isFavor(isFavor)
+                .build();
+    }
 
     @Transactional
     public reviewResponseDto writeReviews(int memberid, int cafeid, writeReviewRequestDto WriteReviewRequestDto) {
@@ -49,7 +74,7 @@ public class ReviewService {
 
         // Dto 정보로 Review 객체 생성
         Review review = Review.builder()
-                .cafe(cafeRepository.getCafeByCafeid(cafeid))
+                .cafe(cafeRepository.getCafeByCafeid(cafeid).get())
                 .reviewwriter(nickname)  // DB에서 조회한 닉네임 설정
                 .reviewdate(currentDate)
                 .reviewtext(WriteReviewRequestDto.getReviewText())
