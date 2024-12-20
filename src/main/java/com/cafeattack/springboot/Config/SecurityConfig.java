@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/map/**").permitAll()
                                 .requestMatchers("/review/**").permitAll()
                                 .requestMatchers("/member/**").authenticated()
+                                .requestMatchers("/record/**").authenticated()
                                 .anyRequest().authenticated()
                 );
 
