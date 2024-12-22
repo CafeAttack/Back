@@ -52,11 +52,10 @@ public class MapController {
 
     // 카페 검색 (ALL)
     @GetMapping(value = "/search", produces = "application/json;charset=UTF-8")
-    public String searchAllCafesByKeyword(@RequestParam("longitude") String longitude,
-                                       @RequestParam("latitude") String latitude,
-                                       @RequestParam("radius") int radius,
+    public String searchAllCafesByKeyword(@RequestParam("longitude") double longitude,
+                                       @RequestParam("latitude") double latitude,
                                        @RequestParam("query") String query) {
-        return mapService.searchAllCafe(longitude, latitude, radius, query);
+        return mapService.searchAllCafe(longitude, latitude, query);
     }
 
     // 카페 검색 (카테고리 별)
