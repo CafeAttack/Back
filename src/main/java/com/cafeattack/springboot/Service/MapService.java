@@ -87,7 +87,11 @@ public class MapService {
         try {
             // 카페 정보 쿼리
             String cafeQuery = """
-            SELECT c.cafe_name AS cafename, c.address, c.time, c.phone, c.latitude, c.longitude,
+            SELECT c.cafe_name AS cafename,
+                   (SELECT json_agg(cc.category) 
+                    FROM cafe_categorypk cc 
+                    WHERE cc.cafe_id = c.cafe_id) AS categories,
+                   c.address, c.time, c.phone, c.latitude, c.longitude,
                    COALESCE((SELECT AVG(r.review_score) FROM review r WHERE r.cafe_id = :cafeId), 0) AS avgscore,
                    EXISTS(SELECT 1 FROM bookmark b 
                           JOIN group_cafepk gcp ON b.group_id = gcp.group_id 
@@ -119,18 +123,28 @@ public class MapService {
             ObjectNode cafeInfo = objectMapper.createObjectNode();
 
             cafeInfo.put("cafename", (String) result[0]);
-            cafeInfo.put("address", (String) result[1]);
-            cafeInfo.put("time", (String) result[2]);
-            cafeInfo.put("phone", (String) result[3]);
-            cafeInfo.put("latitude", result[4] != null ? ((Number) result[4]).doubleValue() : 0.0); // 위도 추가
-            cafeInfo.put("longitude", result[5] != null ? ((Number) result[5]).doubleValue() : 0.0); // 경도 추가
-            cafeInfo.put("avgscore", result[6] != null ? Math.round(((Number) result[6]).doubleValue() * 10) / 10.0 : 0.0);
-            cafeInfo.put("heart", (Boolean) result[7]);
-            cafeInfo.put("reviewcount", ((Number) result[8]).intValue());
+
+            // 카테고리 정보 추가 (배열 형태)
+            if (result[1] != null) {
+                String categoriesJson = (String) result[1];
+                ArrayNode categoriesArray = (ArrayNode) objectMapper.readTree(categoriesJson);
+                cafeInfo.set("categories", categoriesArray);
+            } else {
+                cafeInfo.putArray("categories"); // 빈 배열 반환
+            }
+
+            cafeInfo.put("address", (String) result[2]);
+            cafeInfo.put("time", (String) result[3]);
+            cafeInfo.put("phone", (String) result[4]);
+            cafeInfo.put("latitude", result[5] != null ? ((Number) result[5]).doubleValue() : 0.0); // 위도 추가
+            cafeInfo.put("longitude", result[6] != null ? ((Number) result[6]).doubleValue() : 0.0); // 경도 추가
+            cafeInfo.put("avgscore", result[7] != null ? Math.round(((Number) result[7]).doubleValue() * 10) / 10.0 : 0.0);
+            cafeInfo.put("heart", (Boolean) result[8]);
+            cafeInfo.put("reviewcount", ((Number) result[9]).intValue());
 
             // 최근 리뷰 이미지 및 날짜 추가
-            if (result[9] != null) {
-                String recentReviewsJson = (String) result[9];
+            if (result[10] != null) {
+                String recentReviewsJson = (String) result[10];
                 ArrayNode recentReviewArray = (ArrayNode) objectMapper.readTree(recentReviewsJson);
                 cafeInfo.set("recentReviews", recentReviewArray);
             } else {
@@ -154,7 +168,11 @@ public class MapService {
         try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword)) {
             // SQL 쿼리
             String cafeQuery = """
-            SELECT c.cafe_name AS cafename, c.address, c.time, c.phone, c.avg_score, 
+            SELECT c.cafe_name AS cafename,
+                   (SELECT json_agg(cc.category) 
+                    FROM cafe_categorypk cc 
+                    WHERE cc.cafe_id = c.cafe_id) AS categories,
+                   c.address, c.time, c.phone, c.avg_score, 
                    EXISTS(SELECT 1 FROM bookmark b 
                           JOIN group_cafepk gcp ON b.group_id = gcp.group_id 
                           WHERE b.member_id = ? AND gcp.cafe_id = ?) AS heart
@@ -202,6 +220,16 @@ public class MapService {
                         JsonNode cafeInfo = objectMapper.createObjectNode();
 
                         ((ObjectNode) cafeInfo).put("cafename", cafeResult.getString("cafename"));
+
+                        // 카테고리 정보 추가
+                        String categoriesJson = cafeResult.getString("categories");
+                        if (categoriesJson != null) {
+                            ArrayNode categoriesArray = (ArrayNode) objectMapper.readTree(categoriesJson);
+                            ((ObjectNode) cafeInfo).set("categories", categoriesArray);
+                        } else {
+                            ((ObjectNode) cafeInfo).putArray("categories");
+                        }
+
                         ((ObjectNode) cafeInfo).put("address", cafeResult.getString("address"));
                         ((ObjectNode) cafeInfo).put("time", cafeResult.getString("time"));
                         ((ObjectNode) cafeInfo).put("phone", cafeResult.getString("phone"));
