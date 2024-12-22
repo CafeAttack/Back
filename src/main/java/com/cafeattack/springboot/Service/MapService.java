@@ -1,15 +1,22 @@
 package com.cafeattack.springboot.Service;
 
+import com.cafeattack.springboot.Domain.Dto.response.CafeCategoryLocationDto;
+import com.cafeattack.springboot.Domain.Dto.response.CafeLocationDto;
 import com.cafeattack.springboot.Domain.Entity.Cafe;
 import com.cafeattack.springboot.Exception.BaseException;
 import com.cafeattack.springboot.Repository.CafeCategoryPKRepository;
 import com.cafeattack.springboot.Repository.CafeRepository;
 import com.cafeattack.springboot.Repository.CategoryRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +24,12 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.io.*;
+import java.math.BigDecimal;
 import java.net.*;
 import java.sql.*;
-import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +40,9 @@ public class MapService {
     private final CafeRepository cafeRepository;
     private final CategoryRepository categoryRepository;
     private final CafeCategoryPKRepository cafeCategoryPKRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Value("${spring.datasource.url}")
     private String dbUrl;
@@ -45,228 +55,95 @@ public class MapService {
 
 
     // 카테고리 관계 없이 모든 카페 지도에서 보기
-    public String getAllCafesFromMap(String longitude, String latitude, int radius) {
-        String apiUrl = "https://dapi.kakao.com/v2/local/search/category.json";
-        String jsonString  = null;
+    public List<CafeLocationDto> getAllCafesFromMap(Double longitude, Double latitude) {
+        List<Object[]> results = cafeRepository.findCafesWithinRadius(latitude, longitude);
 
-        try {
-            // URL 구성
-            String addr = apiUrl + "?category_group_code=CE7" + "&x=" + longitude + "&y=" + latitude + "&radius="
-                    + radius + "&sort=distance";
-            URL url = new URL(addr);
-            URLConnection connection = url.openConnection();
-            connection.setRequestProperty("Authorization", "KakaoAK " + apiKey);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            StringBuffer docJson = new StringBuffer();
-            String line;
-            while((line=reader.readLine()) != null) {
-                docJson.append(line);
-            }
-            jsonString = docJson.toString();
-            reader.close();
-
-            // JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(jsonString);
-            ArrayNode documents = (ArrayNode)jsonNode.get("documents");
-
-            ArrayNode filteredDocuments = objectMapper.createArrayNode();
-
-            for (JsonNode place : documents) {
-                String categoryName = place.get("category_name").asText();
-
-                ObjectNode filteredPlace = objectMapper.createObjectNode();
-                filteredPlace.put("id", place.get("id").asText());
-                filteredPlace.put("x", place.get("x").asText());
-                filteredPlace.put("y", place.get("y").asText());
-                // 제외해야할 정보 있으면 더 제외하기
-                filteredDocuments.add(filteredPlace);
-            }
-
-            // 필터링된 결과 JSON 변환
-            ((ObjectNode) jsonNode).set("documents", filteredDocuments);
-            jsonString = objectMapper.writeValueAsString(jsonNode);
-
-        } catch (MalformedURLException e) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (IOException e) {
-            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
-        }
-        return jsonString;
+        return results.stream()
+                .map(row -> new CafeLocationDto(
+                        (Integer) row[0],
+                        ((BigDecimal) row[1]).doubleValue(),    // latitude
+                        ((BigDecimal) row[2]).doubleValue()    // longitude
+                ))
+                .collect(Collectors.toList());
     }
 
+    public List<CafeCategoryLocationDto> getCafeFromMap(int categoryId, double longitude, double latitude) {
+        List<Object[]> results = cafeRepository.findCafesByCategoryAndRadius(categoryId, longitude, latitude);
 
-    public String getCafeFromMap(int categoryId, String longitude, String latitude, int radius) {
-        String apiUrl = "https://dapi.kakao.com/v2/local/search/category.json";
-        String jsonString  = null;
-
-        try {
-            // URL 구성
-            String addr = apiUrl + "?category_group_code=CE7" + "&x=" + longitude + "&y=" + latitude + "&radius="
-                    + radius + "&sort=distance";
-            URL url = new URL(addr);
-            URLConnection connection = url.openConnection();
-            connection.setRequestProperty("Authorization", "KakaoAK " + apiKey);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            StringBuffer docJson = new StringBuffer();
-            String line;
-            while((line=reader.readLine()) != null) {
-                docJson.append(line);
-            }
-            jsonString = docJson.toString();
-            reader.close();
-
-            // JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(jsonString);
-            ArrayNode documents = (ArrayNode)jsonNode.get("documents");
-
-            Set<String> cafeIds = new HashSet<>();
-            try (Connection dbConnection = dataSource.getConnection()) {
-                String dbQuery = "SELECT c.cafeid FROM cafe c JOIN category cat ON c.cafeid = cat.cafeid WHERE cat.category = ?";
-                try (PreparedStatement pstmt = dbConnection.prepareStatement(dbQuery)) {
-                    pstmt.setInt(1, categoryId);  // categoryId를 SQL 쿼리에 안전하게 바인딩
-                    try (ResultSet rs = pstmt.executeQuery()) {
-                        while (rs.next()) {
-                            cafeIds.add(rs.getString("cafeId"));  // 조회된 cafeId를 HashSet에 추가
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
-            }
-
-            ArrayNode filteredDocuments = objectMapper.createArrayNode();
-            for (JsonNode place : documents) {
-                String placeId = place.get("id").asText();
-
-                if (cafeIds.contains(placeId)) {
-                    ObjectNode filteredPlace = objectMapper.createObjectNode();
-                    filteredPlace.put("id", place.get("id").asText());
-                    filteredPlace.put("x", place.get("x").asText());
-                    filteredPlace.put("y", place.get("y").asText());
-                    // 제외해야할 정보 있으면 더 제외하기
-                    filteredDocuments.add(filteredPlace);
-                }
-            }
-
-            // 필터링된 결과 JSON 변환
-            ((ObjectNode) jsonNode).set("documents", filteredDocuments);
-            jsonString = objectMapper.writeValueAsString(jsonNode);
-
-        } catch (MalformedURLException e) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (IOException e) {
-            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
-        }
-        return jsonString;
+        return results.stream()
+                .map(row ->
+                    new CafeCategoryLocationDto(
+                        (Integer) row[0],
+                        ((BigDecimal) row[1]).doubleValue(),
+                        ((BigDecimal) row[2]).doubleValue())
+                )
+                .collect(Collectors.toList());
     }
+
 
 
     // 카페 선택 (간략한 정보)
     public ResponseEntity<String> getShortCafes(Integer cafeId, int memberId) {
-        String jsonString = null;
+        try {
+            // 카페 정보 쿼리
+            String cafeQuery = """
+            SELECT c.cafe_name AS cafename, c.address, c.time, c.phone, c.latitude, c.longitude,
+                   COALESCE((SELECT AVG(r.review_score) FROM review r WHERE r.cafe_id = :cafeId), 0) AS avgscore,
+                   EXISTS(SELECT 1 FROM bookmark b 
+                          JOIN group_cafepk gcp ON b.group_id = gcp.group_id 
+                          WHERE b.member_id = :memberId AND gcp.cafe_id = :cafeId) AS heart,
+                   (SELECT COUNT(*) FROM review r WHERE r.cafe_id = :cafeId) AS reviewcount,
+                   (SELECT json_agg(
+                                json_build_object(
+                                    'picurl', rp.picurl,
+                                    'reviewdate', r.review_date
+                                )
+                          )
+                          FROM reviewpics rp
+                          JOIN review r ON rp.reviewid = r.review_id
+                          WHERE r.cafe_id = :cafeId AND rp.picurl IS NOT NULL
+                          GROUP BY r.review_date, rp.picurl
+                          ORDER BY r.review_date DESC LIMIT 3) AS recentreviews
+            FROM cafe c 
+            WHERE c.cafe_id = :cafeId
+        """;
 
-        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword)) {
-            // SQL 쿼리  - 카페 정보 가져옴
-            String cafeQuery = "SELECT c.cafename, c.address, c.time, c.phone, STRING_AGG(cat.category::text, ',') AS categories, " +
-                    "EXISTS(SELECT 1 FROM bookmark b WHERE b.memberid = ? AND b.relation_cafeid = ?) " +
-                    "AS heart FROM cafe c LEFT JOIN category cat ON c.cafeid = cat.cafeid " +
-                    "WHERE c.cafeid = ? GROUP BY c.cafeid";
+            Query query = entityManager.createNativeQuery(cafeQuery);
+            query.setParameter("memberId", memberId);
+            query.setParameter("cafeId", cafeId);
 
-            String reviewCountQuery = "SELECT COUNT(*) AS reviewCount FROM review WHERE cafeid = ?";
+            Object[] result = (Object[]) query.getSingleResult();
 
-            String recentReviewQuery = "SELECT r.reviewdate, rp.picurl FROM reviewpics rp " +
-                    "JOIN review r ON rp.reviewid = r.reviewid " +
-                    "WHERE r.cafeid = ? AND rp.picurl IS NOT NULL " +
-                    "ORDER BY r.reviewdate DESC LIMIT 3";
+            // JSON 변환
+            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectNode cafeInfo = objectMapper.createObjectNode();
 
-            String avgScoreQuery = "SELECT AVG(reviewscore) AS avgscore FROM review WHERE cafeid = ?";
+            cafeInfo.put("cafename", (String) result[0]);
+            cafeInfo.put("address", (String) result[1]);
+            cafeInfo.put("time", (String) result[2]);
+            cafeInfo.put("phone", (String) result[3]);
+            cafeInfo.put("latitude", result[4] != null ? ((Number) result[4]).doubleValue() : 0.0); // 위도 추가
+            cafeInfo.put("longitude", result[5] != null ? ((Number) result[5]).doubleValue() : 0.0); // 경도 추가
+            cafeInfo.put("avgscore", result[6] != null ? Math.round(((Number) result[6]).doubleValue() * 10) / 10.0 : 0.0);
+            cafeInfo.put("heart", (Boolean) result[7]);
+            cafeInfo.put("reviewcount", ((Number) result[8]).intValue());
 
-            try (PreparedStatement statement = connection.prepareStatement(cafeQuery);
-                PreparedStatement reviewCountStatement = connection.prepareStatement(reviewCountQuery);
-                PreparedStatement recentReviewStatement = connection.prepareStatement(recentReviewQuery);
-                PreparedStatement avgScoreStatement = connection.prepareStatement(avgScoreQuery)) {
-
-                // 카페 정보 쿼리 실행
-                statement.setInt(1, memberId);
-                statement.setInt(2, cafeId);
-                statement.setInt(3, cafeId);
-
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        // JSON 변환
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        JsonNode cafeInfo = objectMapper.createObjectNode();
-
-                        ((ObjectNode) cafeInfo).put("cafename", resultSet.getString("cafename"));
-
-                        //  평균 평점 쿼리 실행
-                        avgScoreStatement.setInt(1, cafeId);
-                        try (ResultSet avgScoreResultSet = avgScoreStatement.executeQuery()) {
-                            if (avgScoreResultSet.next()) {
-                                double avgScore = avgScoreResultSet.getDouble("avgscore");
-                                double roundedAvgScore = Math.round(avgScore * 10.0) / 10.0;
-                                ((ObjectNode) cafeInfo).put("avgscore", roundedAvgScore);
-                            }
-                        }
-
-                        ((ObjectNode) cafeInfo).put("address", resultSet.getString("address"));
-                        ((ObjectNode) cafeInfo).put("time", resultSet.getString("time"));
-                        ((ObjectNode) cafeInfo).put("phone", resultSet.getString("phone"));
-
-                        // 카테고리 번호 설정
-                        String categoryIds = resultSet.getString("categories");
-                        if (categoryIds != null && !categoryIds.isEmpty()) {
-                            ((ObjectNode) cafeInfo).put("categories", categoryIds);
-                        } else {
-                            ((ObjectNode) cafeInfo).put("categories", "카테고리 없음");
-                        }
-
-                        // 북마크 여부 확인
-                        boolean heart = resultSet.getBoolean("heart");
-                        ((ObjectNode) cafeInfo).put("heart", heart);
-
-                        // 리뷰 개수 쿼리 실행
-                        reviewCountStatement.setInt(1, cafeId);
-                        try (ResultSet reviewCountResultSet = reviewCountStatement.executeQuery()) {
-                            if (reviewCountResultSet.next()) {
-                                ((ObjectNode) cafeInfo).put("reviewcount",  reviewCountResultSet.getInt("reviewcount"));
-                            }
-                        }
-
-                        // 최근 리뷰 3개 가져오기
-                        recentReviewStatement.setInt(1, cafeId);
-                        try (ResultSet recentReviewResultSet = recentReviewStatement.executeQuery()) {
-                            ArrayNode recentReviewArray = objectMapper.createArrayNode();
-
-                            while (recentReviewResultSet.next()) {
-                                ObjectNode reviewNode = objectMapper.createObjectNode();
-
-                                // reviewdate 문자열을 가져온 후 형식 변경 (YYYY-MM-DD -> YY.MM.DD)
-                                String reviewDate = recentReviewResultSet.getString("reviewdate");
-                                if (reviewDate != null && reviewDate.length() >= 10) { // null 및 잘못된 데이터 확인
-                                    String formattedDate = reviewDate.substring(2, 4) + "." + reviewDate.substring(5, 7) + "." + reviewDate.substring(8, 10);
-                                    reviewNode.put("reviewdate", formattedDate);
-                                }
-
-                                reviewNode.put("picurl", recentReviewResultSet.getString("picurl"));
-                                recentReviewArray.add(reviewNode);
-                            }
-                            ((ObjectNode) cafeInfo).set("recentReviews", recentReviewArray);
-                        }
-
-                        jsonString = objectMapper.writeValueAsString(cafeInfo);
-                        return ResponseEntity.ok(jsonString);
-                    } else {
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cafe Not Found");
-                    }
-                }
+            // 최근 리뷰 이미지 및 날짜 추가
+            if (result[9] != null) {
+                String recentReviewsJson = (String) result[9];
+                ArrayNode recentReviewArray = (ArrayNode) objectMapper.readTree(recentReviewsJson);
+                cafeInfo.set("recentReviews", recentReviewArray);
+            } else {
+                cafeInfo.putArray("recentReviews"); // 빈 배열 반환
             }
-        } catch (SQLException e) {
-            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+
+            return ResponseEntity.ok(objectMapper.writeValueAsString(cafeInfo));
+
+        } catch (NoResultException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cafe Not Found");
         } catch (Exception e) {
-            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred while processing request");
         }
     }
 
@@ -275,94 +152,104 @@ public class MapService {
         String jsonString = null;
 
         try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword)) {
-            // SQL 쿼리  - 카페 정보 가져옴
-            String cafeQuery = "SELECT c.cafename, c.address, c.time, c.phone, STRING_AGG(cat.category::text, ',') AS categories, " +
-                    "EXISTS(SELECT 1 FROM bookmark b WHERE b.memberid = ? AND b.relation_cafeid = ?) " +
-                    "AS heart FROM cafe c LEFT JOIN category cat ON c.cafeid = cat.cafeid " +
-                    "WHERE c.cafeid = ? GROUP BY c.cafeid";
+            // SQL 쿼리
+            String cafeQuery = """
+            SELECT c.cafe_name AS cafename, c.address, c.time, c.phone, c.avg_score, 
+                   EXISTS(SELECT 1 FROM bookmark b 
+                          JOIN group_cafepk gcp ON b.group_id = gcp.group_id 
+                          WHERE b.member_id = ? AND gcp.cafe_id = ?) AS heart
+            FROM cafe c
+            WHERE c.cafe_id = ?
+        """;
 
-            String reviewCountQuery = "SELECT COUNT(*) AS reviewCount FROM review WHERE cafeid = ?";
+            String reviewQuery = """
+            SELECT r.review_writer AS nickname, r.review_date, r.review_score, r.review_text, rp.picurl 
+            FROM review r 
+            LEFT JOIN reviewpics rp ON r.review_id = rp.reviewid 
+            WHERE r.cafe_id = ? 
+            ORDER BY r.review_date DESC
+        """;
 
-            String allReviewQuery = "SELECT r.reviewwriter AS nickname, r.reviewdate, r.reviewscore, r.reviewtext, rp.picurl " +
-                            "FROM review r LEFT JOIN reviewpics rp ON r.reviewid = rp.reviewid " +
-                            "WHERE r.cafeid = ? ORDER BY r.reviewdate DESC";
+            String amenitiesQuery = """
+            SELECT amenities 
+            FROM review_amenities ra 
+            WHERE ra.review_id IN (SELECT r.review_id FROM review r WHERE r.cafe_id = ?)
+        """;
 
-            String avgScoreQuery = "SELECT AVG(reviewscore) AS avgscore FROM review WHERE cafeid = ?";
+            String tagsQuery = """
+            SELECT t.tag_name AS tag, COUNT(rt.tag_id) AS count 
+            FROM tag t 
+            JOIN review_tagspk rt ON t.tag_id = rt.tag_id 
+            JOIN review r ON rt.review_id = r.review_id 
+            WHERE r.cafe_id = ? 
+            GROUP BY t.tag_name 
+            ORDER BY count DESC
+        """;
 
-            try (PreparedStatement statement = connection.prepareStatement(cafeQuery);
-                 PreparedStatement reviewCountStatement = connection.prepareStatement(reviewCountQuery);
-                 PreparedStatement allReviewsStatement = connection.prepareStatement(allReviewQuery);
-                 PreparedStatement avgScoreStatement = connection.prepareStatement(avgScoreQuery)) {
+            try (PreparedStatement cafeStmt = connection.prepareStatement(cafeQuery);
+                 PreparedStatement reviewStmt = connection.prepareStatement(reviewQuery);
+                 PreparedStatement amenitiesStmt = connection.prepareStatement(amenitiesQuery);
+                 PreparedStatement tagsStmt = connection.prepareStatement(tagsQuery)) {
 
-                // 카페 정보 쿼리 실행
-                statement.setInt(1, memberId);
-                statement.setInt(2, cafeId);
-                statement.setInt(3, cafeId);
+                // 카페 정보 쿼리
+                cafeStmt.setInt(1, memberId);
+                cafeStmt.setInt(2, cafeId);
+                cafeStmt.setInt(3, cafeId);
 
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        // JSON 변환
+                try (ResultSet cafeResult = cafeStmt.executeQuery()) {
+                    if (cafeResult.next()) {
                         ObjectMapper objectMapper = new ObjectMapper();
                         JsonNode cafeInfo = objectMapper.createObjectNode();
 
-                        ((ObjectNode) cafeInfo).put("cafename", resultSet.getString("cafename"));
+                        ((ObjectNode) cafeInfo).put("cafename", cafeResult.getString("cafename"));
+                        ((ObjectNode) cafeInfo).put("address", cafeResult.getString("address"));
+                        ((ObjectNode) cafeInfo).put("time", cafeResult.getString("time"));
+                        ((ObjectNode) cafeInfo).put("phone", cafeResult.getString("phone"));
+                        ((ObjectNode) cafeInfo).put("avgscore", cafeResult.getDouble("avg_score"));
+                        ((ObjectNode) cafeInfo).put("heart", cafeResult.getBoolean("heart"));
 
-                        boolean heart = resultSet.getBoolean("heart");
-                        ((ObjectNode) cafeInfo).put("heart", heart);
-                        ((ObjectNode) cafeInfo).put("address", resultSet.getString("address"));
-                        ((ObjectNode) cafeInfo).put("time", resultSet.getString("time"));
-                        ((ObjectNode) cafeInfo).put("phone", resultSet.getString("phone"));
-
-                        // 카테고리 번호 설정
-                        String categoryIds = resultSet.getString("categories");
-                        if (categoryIds != null && !categoryIds.isEmpty()) {
-                            ((ObjectNode) cafeInfo).put("categories", categoryIds);
-                        } else {
-                            ((ObjectNode) cafeInfo).put("categories", "카테고리 없음");
-                        }
-
-                        // 리뷰 개수 쿼리 실행
-                        reviewCountStatement.setInt(1, cafeId);
-                        try (ResultSet reviewCountResultSet = reviewCountStatement.executeQuery()) {
-                            if (reviewCountResultSet.next()) {
-                                ((ObjectNode) cafeInfo).put("reviewcount",  reviewCountResultSet.getInt("reviewcount"));
-                            }
-                        }
-
-                        //  평균 평점 쿼리 실행
-                        avgScoreStatement.setInt(1, cafeId);
-                        try (ResultSet avgScoreResultSet = avgScoreStatement.executeQuery()) {
-                            if (avgScoreResultSet.next()) {
-                                double avgScore = avgScoreResultSet.getDouble("avgscore");
-                                double roundedAvgScore = Math.round(avgScore * 10.0) / 10.0;
-                                ((ObjectNode) cafeInfo).put("avgscore", roundedAvgScore);
-                            }
-                        }
-
-                        // 모든 리뷰 가져오기
-                        allReviewsStatement.setInt(1, cafeId);
-                        try (ResultSet allReviewsResultSet = allReviewsStatement.executeQuery()) {
-                            ArrayNode allReviewsArray = objectMapper.createArrayNode();
-
-                            while (allReviewsResultSet.next()) {
+                        // 리뷰 정보
+                        reviewStmt.setInt(1, cafeId);
+                        try (ResultSet reviewResult = reviewStmt.executeQuery()) {
+                            ArrayNode reviewsArray = objectMapper.createArrayNode();
+                            while (reviewResult.next()) {
                                 ObjectNode reviewNode = objectMapper.createObjectNode();
-
-                                reviewNode.put("nickname", allReviewsResultSet.getString("nickname"));
-
-                                // reviewdate 문자열을 가져온 후 형식 변경 (YYYY-MM-DD -> YY.MM.DD)
-                                String reviewDate = allReviewsResultSet.getString("reviewdate");
-                                if (reviewDate != null && reviewDate.length() >= 10) { // null 및 잘못된 데이터 확인
-                                    String formattedDate = reviewDate.substring(2, 4) + "." + reviewDate.substring(5, 7) + "." + reviewDate.substring(8, 10);
-                                    reviewNode.put("reviewdate", formattedDate);
+                                reviewNode.put("nickname", reviewResult.getString("nickname"));
+                                String reviewDate = reviewResult.getString("review_date");
+                                if (reviewDate != null) {
+                                    reviewNode.put("reviewdate", reviewDate.substring(2, 4) + "." + reviewDate.substring(5, 7) + "." + reviewDate.substring(8, 10));
                                 }
-
-                                reviewNode.put("reviewscore", allReviewsResultSet.getInt("reviewscore"));
-                                reviewNode.put("reviewtext", allReviewsResultSet.getString("reviewtext"));
-                                reviewNode.put("picurl", allReviewsResultSet.getString("picurl"));
-
-                                allReviewsArray.add(reviewNode);
+                                reviewNode.put("reviewscore", reviewResult.getInt("review_score"));
+                                reviewNode.put("reviewtext", reviewResult.getString("review_text"));
+                                reviewNode.put("picurl", reviewResult.getString("picurl"));
+                                reviewsArray.add(reviewNode);
                             }
-                            ((ObjectNode) cafeInfo).set("reviews", allReviewsArray);
+                            ((ObjectNode) cafeInfo).set("reviews", reviewsArray);
+                        }
+
+                        // 편의시설
+                        amenitiesStmt.setInt(1, cafeId);
+                        try (ResultSet amenitiesResult = amenitiesStmt.executeQuery()) {
+                            ArrayNode amenitiesArray = objectMapper.createArrayNode();
+                            while (amenitiesResult.next()) {
+                                ObjectNode amenityNode = objectMapper.createObjectNode();
+                                amenityNode.put("name", amenitiesResult.getString("amenities"));
+                                amenitiesArray.add(amenityNode);
+                            }
+                            ((ObjectNode) cafeInfo).set("amenities", amenitiesArray);
+                        }
+
+                        // 태그 정보
+                        tagsStmt.setInt(1, cafeId);
+                        try (ResultSet tagsResult = tagsStmt.executeQuery()) {
+                            ArrayNode tagsArray = objectMapper.createArrayNode();
+                            while (tagsResult.next()) {
+                                ObjectNode tagNode = objectMapper.createObjectNode();
+                                tagNode.put("tag", tagsResult.getString("tag"));
+                                tagNode.put("count", tagsResult.getInt("count"));
+                                tagsArray.add(tagNode);
+                            }
+                            ((ObjectNode) cafeInfo).set("tags", tagsArray);
                         }
 
                         jsonString = objectMapper.writeValueAsString(cafeInfo);
@@ -381,102 +268,109 @@ public class MapService {
 
 
     // 카페 검색 (ALL)
-    public String searchAllCafe(String longitude, String latitude, int radius, String query) {
-        String apiUrl = "https://dapi.kakao.com/v2/local/search/keyword.json";
-        String jsonString  = null;
+    public String searchAllCafe(double longitude, double latitude, String query) {
+        String jsonString = null;
 
-        try {
-            String addr = apiUrl + "?category_group_code=CE7&y=" + latitude + "&x=" + longitude + "&radius=" + radius
-                    + "&query=" + java.net.URLEncoder.encode(query, "UTF-8");
-            URL url = new URL(addr);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("Authorization", "KakaoAK " + apiKey);
+        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword)) {
+            // SQL 쿼리 - 카페 검색
+            String cafeSearchQuery = """
+            SELECT cafe_name, cafe_id, address, 
+                   (6371 * acos(cos(radians(?)) * cos(radians(latitude)) 
+                   * cos(radians(longitude) - radians(?)) + sin(radians(?)) 
+                   * sin(radians(latitude)))) AS distance
+            FROM cafe
+            WHERE LOWER(cafe_name) LIKE ?
+            ORDER BY distance ASC
+        """;
 
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            StringBuffer docJson = new StringBuffer();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                docJson.append(line);
+            try (PreparedStatement statement = connection.prepareStatement(cafeSearchQuery)) {
+                // 파라미터 설정
+                statement.setDouble(1, latitude); // 중심 좌표의 위도
+                statement.setDouble(2, longitude); // 중심 좌표의 경도
+                statement.setDouble(3, latitude); // 중심 좌표의 위도 (계산용)
+                statement.setString(4, "%" + query.toLowerCase() + "%"); // 검색어
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    // JSON 변환
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    ArrayNode resultsArray = objectMapper.createArrayNode();
+
+                    while (resultSet.next()) {
+                        ObjectNode cafeNode = objectMapper.createObjectNode();
+                        cafeNode.put("place_name", resultSet.getString("cafe_name"));
+                        cafeNode.put("id", resultSet.getInt("cafe_id"));
+                        cafeNode.put("road_address_name", resultSet.getString("address"));
+                        cafeNode.put("distance", Math.round(resultSet.getDouble("distance") * 1000)); // 미터 단위로 변환
+                        resultsArray.add(cafeNode);
+                    }
+
+                    // 결과 JSON 생성
+                    ObjectNode responseNode = objectMapper.createObjectNode();
+                    responseNode.set("documents", resultsArray);
+                    jsonString = objectMapper.writeValueAsString(responseNode);
+                }
             }
-            bufferedReader.close();
-            jsonString = docJson.toString();
-
-            // JSON 파싱 & 필터링
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(jsonString);
-            ArrayNode documents = (ArrayNode)jsonNode.get("documents");
-            ArrayNode filteredDocuments = objectMapper.createArrayNode();
-
-            for (JsonNode place : documents) {
-                ObjectNode filteredPlace = objectMapper.createObjectNode();
-                filteredPlace.put("place_name", place.get("place_name").asText());
-                filteredPlace.put("id", place.get("id").asText());
-                filteredPlace.put("road_address_name", place.get("road_address_name").asText());
-                filteredPlace.put("distance", Integer.valueOf(place.get("distance").asText()));
-                filteredDocuments.add(filteredPlace);
-            }
-
-            // 필터링된 결과 JSON 변환
-            ((ObjectNode) jsonNode).set("documents", filteredDocuments);
-            jsonString = objectMapper.writeValueAsString(jsonNode);
-        } catch (MalformedURLException e) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (IOException e) {
+        } catch (SQLException e) {
+            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+        } catch (Exception e) {
             throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
         }
         return jsonString;
     }
 
+
     // 카페 검색 (카테고리 별)
-    public ResponseEntity<String> searchCafe(String longitude, String latitude, int radius, String query, int categoryId) {
-        String apiUrl = "https://dapi.kakao.com/v2/local/search/keyword.json";
+    public ResponseEntity<String> searchCafe(double longitude, double latitude, String query, int categoryId) {
         String jsonString = null;
 
-        try {
-            String addr = apiUrl + "?category_group_code=CE7&y=" + latitude + "&x=" + longitude
-                    + "&radius=" + radius + "&query=" + java.net.URLEncoder.encode(query, "UTF-8");
-            URL url = new URL(addr);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("Authorization", "KakaoAK " + apiKey);
+        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword)) {
+            // SQL 쿼리 - 카테고리별 카페 검색
+            String cafeSearchQuery = """
+            SELECT c.cafe_name AS place_name, c.cafe_id AS id, c.address AS road_address_name,
+                   (6371 * acos(cos(radians(?)) * cos(radians(c.latitude)) 
+                   * cos(radians(c.longitude) - radians(?)) + sin(radians(?)) 
+                   * sin(radians(c.latitude)))) AS distance
+            FROM cafe c
+            JOIN cafe_categorypk cc ON c.cafe_id = cc.cafe_id
+            WHERE LOWER(c.cafe_name) LIKE ? 
+            AND cc.category = ?
+            ORDER BY distance ASC
+        """;
 
-            // API 응답 받기
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            StringBuffer docJson = new StringBuffer();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                docJson.append(line);
-            }
-            bufferedReader.close();
-            jsonString = docJson.toString();
+            try (PreparedStatement statement = connection.prepareStatement(cafeSearchQuery)) {
+                // 파라미터 설정
+                statement.setDouble(1, latitude); // 중심 좌표의 위도
+                statement.setDouble(2, longitude); // 중심 좌표의 경도
+                statement.setDouble(3, latitude); // 중심 좌표의 위도 (계산용)
+                statement.setString(4, "%" + query.toLowerCase() + "%"); // 검색어
+                statement.setInt(5, categoryId); // 카테고리
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(jsonString);
-            ArrayNode documents = (ArrayNode)jsonNode.get("documents");
-            ArrayNode filteredDocuments = objectMapper.createArrayNode();
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    // JSON 변환
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    ArrayNode resultsArray = objectMapper.createArrayNode();
 
-            // DB에서 카테고리 ID로 필터링된 카페 정보 가져오기
-            List<Cafe> cafes = cafeCategoryPKRepository.findByCategoryId(categoryId);
+                    while (resultSet.next()) {
+                        ObjectNode cafeNode = objectMapper.createObjectNode();
+                        cafeNode.put("place_name", resultSet.getString("place_name"));
+                        cafeNode.put("id", resultSet.getInt("id"));
+                        cafeNode.put("road_address_name", resultSet.getString("road_address_name"));
+                        cafeNode.put("distance", Math.round(resultSet.getDouble("distance") * 1000)); // 미터 단위로 변환
+                        resultsArray.add(cafeNode);
+                    }
 
-            for (JsonNode place : documents) {
-                String placeId = place.get("id").asText();
-
-                if (cafes.stream().anyMatch(cafe -> String.valueOf(cafe.getCafeId()).equals(placeId))) {
-                    ObjectNode filteredPlace = objectMapper.createObjectNode();
-                    filteredPlace.put("place_name", place.get("place_name").asText());
-                    filteredPlace.put("id", place.get("id").asText());
-                    filteredPlace.put("road_address_name", place.get("road_address_name").asText());
-                    filteredPlace.put("distance", Integer.valueOf(place.get("distance").asText()));
-                    filteredDocuments.add(filteredPlace);
+                    // 결과 JSON 생성
+                    ObjectNode responseNode = objectMapper.createObjectNode();
+                    responseNode.set("documents", resultsArray);
+                    jsonString = objectMapper.writeValueAsString(responseNode);
                 }
             }
-            ((ObjectNode) jsonNode).set("documents", filteredDocuments);
-            jsonString = objectMapper.writeValueAsString(jsonNode);
-
-            return new ResponseEntity<>(jsonString, HttpStatus.OK);
-        } catch (MalformedURLException e) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (IOException e) {
+        } catch (SQLException e) {
+            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+        } catch (Exception e) {
             throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
         }
+        return new ResponseEntity<>(jsonString, HttpStatus.OK);
     }
+
 }
