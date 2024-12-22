@@ -60,11 +60,10 @@ public class MapController {
 
     // 카페 검색 (카테고리 별)
     @GetMapping(value = "/search/{categoryId}", produces = "application/json;charset=UTF-8")
-    public ResponseEntity<String> searchCafesByKeyword(@RequestParam("longitude") String longitude,
-                                       @RequestParam("latitude") String latitude,
-                                       @RequestParam("radius") int radius,
+    public ResponseEntity<String> searchCafesByKeyword(@RequestParam("longitude") double longitude,
+                                       @RequestParam("latitude") double latitude,
                                        @RequestParam("query") String query,
                                        @PathVariable("categoryId") int categoryId) {
-        return mapService.searchCafe(longitude, latitude, radius, query, categoryId);
+        return mapService.searchCafe(longitude, latitude, query, categoryId);
     }
 }

@@ -320,55 +320,57 @@ public class MapService {
 
 
     // 카페 검색 (카테고리 별)
-    public ResponseEntity<String> searchCafe(String longitude, String latitude, int radius, String query, int categoryId) {
-        String apiUrl = "https://dapi.kakao.com/v2/local/search/keyword.json";
+    public ResponseEntity<String> searchCafe(double longitude, double latitude, String query, int categoryId) {
         String jsonString = null;
 
-        try {
-            String addr = apiUrl + "?category_group_code=CE7&y=" + latitude + "&x=" + longitude
-                    + "&radius=" + radius + "&query=" + java.net.URLEncoder.encode(query, "UTF-8");
-            URL url = new URL(addr);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("Authorization", "KakaoAK " + apiKey);
+        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword)) {
+            // SQL 쿼리 - 카테고리별 카페 검색
+            String cafeSearchQuery = """
+            SELECT c.cafe_name AS place_name, c.cafe_id AS id, c.address AS road_address_name,
+                   (6371 * acos(cos(radians(?)) * cos(radians(c.latitude)) 
+                   * cos(radians(c.longitude) - radians(?)) + sin(radians(?)) 
+                   * sin(radians(c.latitude)))) AS distance
+            FROM cafe c
+            JOIN cafe_categorypk cc ON c.cafe_id = cc.cafe_id
+            WHERE LOWER(c.cafe_name) LIKE ? 
+            AND cc.category = ?
+            ORDER BY distance ASC
+        """;
 
-            // API 응답 받기
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            StringBuffer docJson = new StringBuffer();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                docJson.append(line);
-            }
-            bufferedReader.close();
-            jsonString = docJson.toString();
+            try (PreparedStatement statement = connection.prepareStatement(cafeSearchQuery)) {
+                // 파라미터 설정
+                statement.setDouble(1, latitude); // 중심 좌표의 위도
+                statement.setDouble(2, longitude); // 중심 좌표의 경도
+                statement.setDouble(3, latitude); // 중심 좌표의 위도 (계산용)
+                statement.setString(4, "%" + query.toLowerCase() + "%"); // 검색어
+                statement.setInt(5, categoryId); // 카테고리
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(jsonString);
-            ArrayNode documents = (ArrayNode)jsonNode.get("documents");
-            ArrayNode filteredDocuments = objectMapper.createArrayNode();
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    // JSON 변환
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    ArrayNode resultsArray = objectMapper.createArrayNode();
 
-            // DB에서 카테고리 ID로 필터링된 카페 정보 가져오기
-            List<Cafe> cafes = cafeCategoryPKRepository.findByCategoryId(categoryId);
+                    while (resultSet.next()) {
+                        ObjectNode cafeNode = objectMapper.createObjectNode();
+                        cafeNode.put("place_name", resultSet.getString("place_name"));
+                        cafeNode.put("id", resultSet.getInt("id"));
+                        cafeNode.put("road_address_name", resultSet.getString("road_address_name"));
+                        cafeNode.put("distance", Math.round(resultSet.getDouble("distance") * 1000)); // 미터 단위로 변환
+                        resultsArray.add(cafeNode);
+                    }
 
-            for (JsonNode place : documents) {
-                String placeId = place.get("id").asText();
-
-                if (cafes.stream().anyMatch(cafe -> String.valueOf(cafe.getCafeId()).equals(placeId))) {
-                    ObjectNode filteredPlace = objectMapper.createObjectNode();
-                    filteredPlace.put("place_name", place.get("place_name").asText());
-                    filteredPlace.put("id", place.get("id").asText());
-                    filteredPlace.put("road_address_name", place.get("road_address_name").asText());
-                    filteredPlace.put("distance", Integer.valueOf(place.get("distance").asText()));
-                    filteredDocuments.add(filteredPlace);
+                    // 결과 JSON 생성
+                    ObjectNode responseNode = objectMapper.createObjectNode();
+                    responseNode.set("documents", resultsArray);
+                    jsonString = objectMapper.writeValueAsString(responseNode);
                 }
             }
-            ((ObjectNode) jsonNode).set("documents", filteredDocuments);
-            jsonString = objectMapper.writeValueAsString(jsonNode);
-
-            return new ResponseEntity<>(jsonString, HttpStatus.OK);
-        } catch (MalformedURLException e) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (IOException e) {
+        } catch (SQLException e) {
+            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+        } catch (Exception e) {
             throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
         }
+        return new ResponseEntity<>(jsonString, HttpStatus.OK);
     }
+
 }
