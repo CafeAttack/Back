@@ -119,6 +119,8 @@ public class RecordService {
         Records newRecord = Records.builder()
                 .recordDate(request.getRecorddate())
                 .recordText(request.getRecordtext())
+                .cafe(cafe)
+                .member(member)
                 .build();
         newRecord = recordRepository.save(newRecord);
 
@@ -163,9 +165,6 @@ public class RecordService {
             return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 Cafe가 없습니다."));
 
         Records records = recordRepository.findById(recordId).get();
-        recordRepository.delete(records);
-        if(records == null)
-            return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 Record가 없습니다."));
 
         records.setRecordDate(request.getRecorddate());
         records.setRecordText(request.getRecordtext());
