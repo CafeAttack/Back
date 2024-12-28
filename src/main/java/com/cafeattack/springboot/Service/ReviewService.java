@@ -97,9 +97,9 @@ public class ReviewService {
         }
 
         if (WriteReviewRequestDto.getTags() != null) {
-            for (String tagName : WriteReviewRequestDto.getTags()) {
-                Tag tag = tagRepository.findByTagName(tagName)
-                        .orElseGet(()->tagRepository.save(Tag.builder().tagName(tagName).build()));
+            for (Integer tagId : WriteReviewRequestDto.getTags()) {
+                Tag tag = tagRepository.findById(tagId)
+                        .orElseThrow(()->new BaseException(HttpStatus.NOT_FOUND.value(), "Tag Not Found: " + tagId));
 
                 ReviewTagsPK reviewTag = ReviewTagsPK.builder()
                         .review(saveReview)

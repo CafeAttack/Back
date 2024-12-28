@@ -31,7 +31,8 @@ public class ReviewController {
         try {
             GetReviewWriteResponseDTO data = reviewService.getReviewWriting(memberId, cafeId);
 
-            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(HttpStatus.OK.value(), "리뷰 작성이 완료되었습니다.", data));
+            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(HttpStatus.OK.value(),
+                    "리뷰 작성 화면이 열렸습니다", data));
 
         } catch (BaseException e) {
             return ResponseEntity.status(e.getCode()).body(new BaseErrorResponse(e.getCode(), e.getMessage()));
@@ -43,7 +44,7 @@ public class ReviewController {
                                          @PathVariable("cafeid") int cafeid,
                                          @RequestParam("reviewText") String reviewText,
                                          @RequestParam("reviewScore") int reviewScore,
-                                         @RequestParam(value = "tags", required = false) List<String> tags,
+                                         @RequestParam(value = "tags", required = false) List<Integer> tags,
                                          @RequestParam(value = "amenities", required = false) List<Boolean> amenities,
                                          @RequestPart(value = "images", required = false)MultipartFile[] images) {
         try {
