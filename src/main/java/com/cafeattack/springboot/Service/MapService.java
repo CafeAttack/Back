@@ -80,8 +80,6 @@ public class MapService {
                 .collect(Collectors.toList());
     }
 
-
-
     // 카페 선택 (간략한 정보)
     public ResponseEntity<String> getShortCafes(Integer cafeId, int memberId) {
         try {
@@ -93,24 +91,28 @@ public class MapService {
                     WHERE cc.cafe_id = c.cafe_id) AS categories,
                    c.address, c.time, c.phone, c.latitude, c.longitude,
                    COALESCE((SELECT AVG(r.review_score) FROM review r WHERE r.cafe_id = :cafeId), 0) AS avgscore,
-                   EXISTS(SELECT 1 FROM bookmark b 
+                   EXISTS(SELECT 1 
+                          FROM bookmark b 
                           JOIN group_cafepk gcp ON b.group_id = gcp.group_id 
                           WHERE b.member_id = :memberId AND gcp.cafe_id = :cafeId) AS heart,
                    (SELECT COUNT(*) FROM review r WHERE r.cafe_id = :cafeId) AS reviewcount,
                    (SELECT json_agg(
-                                json_build_object(
-                                    'picurl', rp.picurl,
-                                    'reviewdate', r.review_date
-                                )
-                          )
-                          FROM reviewpics rp
-                          JOIN review r ON rp.reviewid = r.review_id
-                          WHERE r.cafe_id = :cafeId AND rp.picurl IS NOT NULL
-                          GROUP BY r.review_date, rp.picurl
-                          ORDER BY r.review_date DESC LIMIT 3) AS recentreviews
+                             json_build_object(
+                                 'picurl', COALESCE(subquery.picurl, null),
+                                 'reviewdate', subquery.review_date
+                             )
+                         )
+                    FROM (
+                        SELECT r.review_date, rp.picurl
+                        FROM review r
+                        LEFT JOIN reviewpics rp ON rp.reviewid = r.review_id
+                        WHERE r.cafe_id = :cafeId
+                        ORDER BY r.review_date DESC
+                        LIMIT 3
+                    ) AS subquery) AS recentreviews
             FROM cafe c 
             WHERE c.cafe_id = :cafeId
-        """;
+            """;
 
             Query query = entityManager.createNativeQuery(cafeQuery);
             query.setParameter("memberId", memberId);
@@ -169,16 +171,20 @@ public class MapService {
             // SQL 쿼리
             String cafeQuery = """
             SELECT c.cafe_name AS cafename,
-                   (SELECT json_agg(cc.category) 
+                (SELECT json_agg(cc.category) 
                     FROM cafe_categorypk cc 
                     WHERE cc.cafe_id = c.cafe_id) AS categories,
-                   c.address, c.time, c.phone, c.avg_score, 
-                   EXISTS(SELECT 1 FROM bookmark b 
+                   c.address, c.time, c.phone,
+                   COALESCE((SELECT AVG(r.review_score)::NUMERIC(38,2)
+                             FROM review r 
+                             WHERE r.cafe_id = c.cafe_id), 0) AS avgscore, -- 동적으로 계산
+                   EXISTS(SELECT 1 
+                          FROM bookmark b 
                           JOIN group_cafepk gcp ON b.group_id = gcp.group_id 
                           WHERE b.member_id = ? AND gcp.cafe_id = ?) AS heart
             FROM cafe c
             WHERE c.cafe_id = ?
-        """;
+            """;
 
             String reviewQuery = """
             SELECT r.review_writer AS nickname, r.review_date, r.review_score, r.review_text, rp.picurl 
@@ -233,7 +239,7 @@ public class MapService {
                         ((ObjectNode) cafeInfo).put("address", cafeResult.getString("address"));
                         ((ObjectNode) cafeInfo).put("time", cafeResult.getString("time"));
                         ((ObjectNode) cafeInfo).put("phone", cafeResult.getString("phone"));
-                        ((ObjectNode) cafeInfo).put("avgscore", cafeResult.getDouble("avg_score"));
+                        ((ObjectNode) cafeInfo).put("avgscore", cafeResult.getDouble("avgscore"));
                         ((ObjectNode) cafeInfo).put("heart", cafeResult.getBoolean("heart"));
 
                         // 리뷰 정보
