@@ -18,8 +18,8 @@ public class BookmarkController {
 
     @GetMapping("/member/{memberid}/add-bookmark")
     public ResponseEntity getPageforEdit(@PathVariable("memberid") int memberid
-            , @RequestParam int cafeId) {
-        return bookmarkService.getPageforEdit(memberid, cafeId);
+            , @RequestBody CafeIdDTO cafeIdDTO) {
+        return bookmarkService.getPageforEdit(memberid, cafeIdDTO.getCafeId());
     }
 
     @PostMapping("/member/{memberid}/add-bookmark")

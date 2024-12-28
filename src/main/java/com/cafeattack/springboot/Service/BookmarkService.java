@@ -4,7 +4,6 @@ import com.cafeattack.springboot.Domain.Dto.request.*;
 import com.cafeattack.springboot.Domain.Dto.response.*;
 import com.cafeattack.springboot.Domain.Entity.Bookmark;
 import com.cafeattack.springboot.Domain.Entity.Cafe;
-import com.cafeattack.springboot.Domain.Entity.mapping.CafeCategoryPK;
 import com.cafeattack.springboot.Domain.Entity.mapping.GroupCafePK;
 import com.cafeattack.springboot.Domain.Entity.Member;
 import com.cafeattack.springboot.Repository.*;
@@ -76,7 +75,7 @@ public class BookmarkService {
 
         bookmarkPageforEditDto BookmarkPageforEditDto = new bookmarkPageforEditDto();
         BookmarkPageforEditDto.setGroups(new ArrayList<>());
-        List<Integer> allgroupId = groupCafePKRepository.findAllgroupIdBymemberId(member_id);
+        List<Integer> allgroupId = bookmarkRepository.findAllgroupIdBymemberId(member_id);
         for(int i = 0; i < allgroupId.size(); i++) {
             bookmarkPageforEditGroupDto group = new bookmarkPageforEditGroupDto();
 
@@ -134,22 +133,12 @@ public class BookmarkService {
         if(member == null)
             return ResponseEntity.status(400).body(new BaseResponse(400, "해당 ID에 맞는 User가 없습니다."));
 
-        Integer newGroupId = 0;
-        Optional<Integer> number = bookmarkRepository.getMaxGroupid();
-        if(number.isPresent()) {
-            newGroupId = number.get() + 1;
-        }
-        else {
-            newGroupId = 0;
-        }
-
         Bookmark bookmark = Bookmark.builder()
-                .groupId(newGroupId)
-                .groupName(AddGroupDto.getGroupName())
+                .groupName(AddGroupDto.getGroupname())
                 .memberId(member_id).build();
         bookmarkRepository.save(bookmark);
 
-        return ResponseEntity.status(200).body(new BaseResponse(200, "그룹이 추가되었습니다.", newGroupId));
+        return ResponseEntity.status(200).body(new BaseResponse(200, "그룹이 추가되었습니다.", bookmark.getGroupId()));
     }
 
     @Transactional
