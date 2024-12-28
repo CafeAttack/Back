@@ -14,6 +14,6 @@ public class writeReviewRequestDto {
     private Integer reviewScore;
     private MultipartFile[] images;
 
-    private List<String> tags;
+    private List<Integer> tags;
     private List<Boolean> amenities;
 }
